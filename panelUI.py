@@ -32,13 +32,24 @@ class panelUI(QWidget):
 class sectionElement(QWidget):
     def __init__(self, parent: QWidget | None, **properties) -> None:
         super().__init__(parent= parent)
-        # Tells the painter to paint all the background
-        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_StyledBackground, True)
         # Save properties in case we need them later
         self.properties = properties
-        self.MainGridLayout = QGridLayout(self)
-        self.labelRef      = QLabel(properties['REF'], self)
-        self.labelName     = QLabel(properties['NAME'], self)
+        # Tells the painter to paint all the background
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_StyledBackground, True)
+        self.MainLayout = QVBoxLayout(self)
+
+        self.UpperRow   = QHBoxLayout(self)
+        self.MiddleRow  = QHBoxLayout(self)
+        self.LowerRow   = QHBoxLayout(self)
+
+        self.labelRef      = QLabel(
+            properties['REF'],
+            self
+        )
+        self.labelName     = QLabel(
+            properties['NAME'],
+            self
+        )
         self.labelMember   = QLabel(
             f"Miembro verificado" if(properties['LOOKUP_MEMBER']) else f"Socix sin verificar", 
             self
@@ -46,20 +57,41 @@ class sectionElement(QWidget):
         self.labelMember.setStyleSheet(
             f"color: {'black' if(properties['LOOKUP_MEMBER']) else 'red'}"
         )
-        self.labelComment  = QLabel(properties['COMMENT'])
-        self.labelLayerH   = QLabel(f"Altura capa: {properties['LAYER_H']}")
-        self.labelRigidity = QLabel(f"Rigidez: {properties['RIGIDITY']}")
-        self.labelColour   = QLabel(f"Color: {properties['COLOUR']}")
-        self.MainGridLayout.addWidget(self.labelRef, 1, 1)
-        self.MainGridLayout.addWidget(self.labelName, 1, 2, 1, 5)
-        self.MainGridLayout.addWidget(self.labelMember, 2, 1, 1, 3)
-        self.MainGridLayout.addWidget(self.labelComment, 2, 2)
-        self.MainGridLayout.addWidget(self.labelLayerH, 3, 1)
-        self.MainGridLayout.addWidget(self.labelRigidity, 3, 2)
-        self.MainGridLayout.addWidget(self.labelColour, 3, 3)
+        self.labelComment  = QLabel(
+            properties['COMMENT'],
+            self
+        )
+        self.labelLayerH   = QLabel(
+            f"Altura capa: {properties['LAYER_H']}",
+            self
+        )
+        self.labelRigidity = QLabel(
+            f"Rigidez: {properties['RIGIDITY']}",
+            self
+        )
+        # self.labelRigidity.setStyleSheet(
+        #     f
+        # )
+        self.labelColour   = QLabel(
+            f"Color: {properties['COLOUR']}",
+            self
+        )
+
+        self.UpperRow.addWidget(self.labelRef, QtCore.Qt.AlignmentFlag.AlignLeft)
+        self.UpperRow.addWidget(self.labelName, QtCore.Qt.AlignmentFlag.AlignLeft)
+
+        self.MiddleRow.addWidget(self.labelComment)
+
+        self.LowerRow.addWidget(self.labelLayerH)
+        self.LowerRow.addWidget(self.labelRigidity)
+        self.LowerRow.addWidget(self.labelColour)
+        self.LowerRow.addWidget(self.labelMember)
+
+        self.MainLayout.addLayout(self.UpperRow)
+        self.MainLayout.addLayout(self.MiddleRow)
+        self.MainLayout.addLayout(self.LowerRow)
+
         self.setStyleSheet("""
             background-color: cyan;
         """)
-        self.setLayout(self.MainGridLayout)
-        
-
+        self.setLayout(self.MainLayout)

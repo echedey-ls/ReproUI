@@ -37,8 +37,15 @@ class sectionElement(QWidget):
         # Save properties in case we need them later
         self.properties = properties
         self.MainGridLayout = QGridLayout(self)
-        self.labelRef      = QLabel(properties['REF'], self)
-        self.labelName     = QLabel(properties['NAME'], self)
+        
+        self.labelRef      = QLabel(
+            properties['REF'],
+            self
+        )
+        self.labelName     = QLabel(
+            properties['NAME'],
+            self
+        )
         self.labelMember   = QLabel(
             f"Miembro verificado" if(properties['LOOKUP_MEMBER']) else f"Socix sin verificar", 
             self
@@ -46,10 +53,26 @@ class sectionElement(QWidget):
         self.labelMember.setStyleSheet(
             f"color: {'black' if(properties['LOOKUP_MEMBER']) else 'red'}"
         )
-        self.labelComment  = QLabel(properties['COMMENT'])
-        self.labelLayerH   = QLabel(f"Altura capa: {properties['LAYER_H']}")
-        self.labelRigidity = QLabel(f"Rigidez: {properties['RIGIDITY']}")
-        self.labelColour   = QLabel(f"Color: {properties['COLOUR']}")
+        self.labelComment  = QLabel(
+            properties['COMMENT'],
+            self
+        )
+        self.labelLayerH   = QLabel(
+            f"Altura capa: {properties['LAYER_H']}",
+            self
+        )
+        self.labelRigidity = QLabel(
+            f"Rigidez: {properties['RIGIDITY']}",
+            self
+        )
+        # self.labelRigidity.setStyleSheet(
+        #     f
+        # )
+        self.labelColour   = QLabel(
+            f"Color: {properties['COLOUR']}",
+            self
+        )
+
         self.MainGridLayout.addWidget(self.labelRef, 1, 1)
         self.MainGridLayout.addWidget(self.labelName, 1, 2, 1, 5)
         self.MainGridLayout.addWidget(self.labelMember, 2, 1, 1, 3)

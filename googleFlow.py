@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# [START sheets_quickstart]
-from __future__ import print_function
-
 import os.path
 
 from google.auth.transport.requests import Request
@@ -23,57 +20,50 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-# If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+class googleSpreadSheetInterface(object):
+    def __init__(self, *, secretsPath, spreadSheetId) -> None:
+        self._secretsPath   = secretsPath
+        self._spreadSheetId = spreadSheetId
+        self._scopes   = ['https://www.googleapis.com/auth/spreadsheets']
+        ## CREDENTIALS INITIALIZATION
+        self._credsPath = os.path.join(self._secretsPath, 'credentials.json')
+        self._tokenPath = os.path.join(self._secretsPath, 'token.json')
+        self._creds = None
+        # The file token.json stores the user's access and refresh tokens, and is
+        # created automatically when the authorization flow completes for the first
+        # time.
+        if os.path.exists(self._tokenPath):
+            self._creds = Credentials.from_authorized_user_file(self._tokenPath, self._scopes)
+        # If there are no (valid) credentials available, let the user log in.
+        if not self._creds or not self._creds.valid:
+            if self._creds and self._creds.expired and self._creds.refresh_token:
+                self._creds.refresh(Request())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    self._credsPath, 
+                    self._scopes
+                )
+                self._creds = flow.run_local_server(port=0)
+            # Save the credentials for the next run
+            with open(self._tokenPath, 'w') as token:
+                token.write(self._creds.to_json())
 
-# The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
-SAMPLE_RANGE_NAME = 'Class Data!A2:E'
+    def readRange(self, range) -> list[list]:
+        try:
+            service = build('sheets', 'v4', credentials=self._creds)
 
+            # Call the Sheets API
+            sheet = service.spreadsheets()
+            result = sheet.values().get(
+                spreadsheetId= self._spreadSheetId,
+                range= range
+            ).execute()
+            values = result.get('values', [])
 
-def main():
-    """Shows basic usage of the Sheets API.
-    Prints values from a sample spreadsheet.
-    """
-    creds = None
-    # The file token.json stores the user's access and refresh tokens, and is
-    # created automatically when the authorization flow completes for the first
-    # time.
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
-
-    try:
-        service = build('sheets', 'v4', credentials=creds)
-
-        # Call the Sheets API
-        sheet = service.spreadsheets()
-        result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
-                                    range=SAMPLE_RANGE_NAME).execute()
-        values = result.get('values', [])
-
-        if not values:
-            print('No data found.')
-            return
-
-        print('Name, Major:')
-        for row in values:
-            # Print columns A and E, which correspond to indices 0 and 4.
-            print('%s, %s' % (row[0], row[4]))
-    except HttpError as err:
-        print(err)
-
-
-if __name__ == '__main__':
-    main()
-# [END sheets_quickstart]
+            if not values:
+                print('No data found.')
+                return
+            return values
+        except HttpError as err:
+            print(err)
+            return None

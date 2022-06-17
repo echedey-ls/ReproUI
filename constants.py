@@ -50,3 +50,11 @@ BOOLEAN_COLUMNS = [
     'PICKED_UP',
     'PAID'
 ]
+
+INTEGER_COLUMNS = [
+    'RIGIDITY'
+]
+
+DATETIME_COLUMNS = [
+    'TEMP'
+]

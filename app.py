@@ -17,6 +17,7 @@ __doc__       = "ReproUI is a GUI application designed to aid in the 3D printing
 
 import os
 import sys
+from numpy import datetime64
 import tomli
 
 import pandas as pd
@@ -64,6 +65,10 @@ class widgetApp(QMainWindow):
         )
         for booleanColumn in constants.BOOLEAN_COLUMNS:
             ordersDf[booleanColumn] = ordersDf[booleanColumn].map({'TRUE': True, 'FALSE': False, '': False})
+        for integerColumn in constants.INTEGER_COLUMNS:
+            ordersDf[integerColumn] = ordersDf[integerColumn].astype(int)
+        for datetimeDolumn in constants.DATETIME_COLUMNS:
+            ordersDf[datetimeDolumn] = ordersDf[datetimeDolumn].astype(datetime64)
         return ordersDf
 
 if __name__ == "__main__":

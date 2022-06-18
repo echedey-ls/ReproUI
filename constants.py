@@ -24,7 +24,7 @@ COLUMN_NAMES = [
     'FILE_LINK',
     'LAYER_H',
     'RIGIDITY',
-    'COLOUR',
+    'COLOUR_MATERIAL',
     'COMMENT',
     'SAYS_IS_MEMBER',
     'ACCEPTS_PAYING',
@@ -52,7 +52,8 @@ BOOLEAN_COLUMNS = [
 ]
 
 INTEGER_COLUMNS = [
-    'RIGIDITY'
+    'RIGIDITY',
+    'REF'
 ]
 
 DATETIME_COLUMNS = [

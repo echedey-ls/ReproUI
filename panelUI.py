@@ -37,14 +37,21 @@ class sectionElement(QWidget):
         # Save properties in case we need them later
         self.properties = properties
         self.MainGridLayout = QGridLayout(self)
-        
+
         self.labelRef      = QLabel(
-            properties['REF'],
+            f"#{properties['REF']:0>4n}",
             self
+        )
+        self.labelRef.setStyleSheet(
+            "font-weight: bold;"
+            "font-size: 18px;"
         )
         self.labelName     = QLabel(
             properties['NAME'],
             self
+        )
+        self.labelName.setStyleSheet(
+            "font-size: 18px;"
         )
         self.labelMember   = QLabel(
             f"Miembro verificado" if(properties['LOOKUP_MEMBER']) else f"Socix sin verificar", 
@@ -62,27 +69,26 @@ class sectionElement(QWidget):
             self
         )
         self.labelRigidity = QLabel(
-            f"Rigidez: {properties['RIGIDITY']}",
+            f"Rigidez: {properties['RIGIDITY']}/5",
             self
         )
         # self.labelRigidity.setStyleSheet(
         #     f
         # )
-        self.labelColour   = QLabel(
-            f"Color: {properties['COLOUR']}",
+        self.labelMaterial = QLabel(
+            f"Material: {properties['COLOUR_MATERIAL']}",
             self
         )
 
         self.MainGridLayout.addWidget(self.labelRef, 1, 1)
-        self.MainGridLayout.addWidget(self.labelName, 1, 2, 1, 5)
-        self.MainGridLayout.addWidget(self.labelMember, 2, 1, 1, 3)
-        self.MainGridLayout.addWidget(self.labelComment, 2, 2)
+        self.MainGridLayout.addWidget(self.labelName, 1, 2, 1, 2)
+        self.MainGridLayout.addWidget(self.labelMember, 2, 1)
+        self.MainGridLayout.addWidget(self.labelComment, 2, 2, 1, 2)
         self.MainGridLayout.addWidget(self.labelLayerH, 3, 1)
         self.MainGridLayout.addWidget(self.labelRigidity, 3, 2)
-        self.MainGridLayout.addWidget(self.labelColour, 3, 3)
+        self.MainGridLayout.addWidget(self.labelMaterial, 3, 3)
         self.setStyleSheet("""
             background-color: cyan;
         """)
         self.setLayout(self.MainGridLayout)
-        
-
+        self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)

@@ -25,7 +25,7 @@ from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import *
 
 from googleFlow import googleSpreadSheetInterface
-from panelUI import panelUI
+from panelUI import *
 import constants
 
 secretsPath = '.\\secrets'
@@ -37,15 +37,14 @@ class widgetApp(QMainWindow):
         super().__init__(parent= parent)
 
         self.initSSInterface()
-
         
-        ordersDict = self.readSS().to_dict('records')
-        self.panelUI = panelUI(self, ordersDict)
+        self._ordersDict = self.readSS().to_dict('records')
+        self.panelUI = panelUI(self, self._ordersDict)
         self.initUI()
 
     def initUI(self) -> None:
         self.setCentralWidget(self.panelUI)
-        pass
+
     def initSSInterface(self) -> None:
         if( os.path.exists(configFile) and os.path.isfile(configFile) ):
             with open(configFile, 'rb') as cfFile:
@@ -60,7 +59,7 @@ class widgetApp(QMainWindow):
         ordersRaw = self._sSheetInter.readRange(dataRange)
         ordersDf = pd.DataFrame(
             columns= constants.COLUMN_NAMES,
-            # Make sure input is all same length as column names
+            # Make sure input is all same length as column names [23]
             data= [ order+[''] if len(order)==22 else order for order in ordersRaw[1:] ]
         )
         for booleanColumn in constants.BOOLEAN_COLUMNS:

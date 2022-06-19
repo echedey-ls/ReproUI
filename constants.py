@@ -15,7 +15,9 @@ __version__   = "0.1.0"
 __status__    = "Prototype"
 __doc__       = "This file contains constants used in the app"
 
-# Column tags to rename terrible auto-generated forms names
+from pandas import Timestamp
+
+# Column tags to rename terrible auto-generated form column titles
 COLUMN_NAMES = [
     'TEMP',
     'EMAIL',
@@ -59,3 +61,29 @@ INTEGER_COLUMNS = [
 DATETIME_COLUMNS = [
     'TEMP'
 ]
+
+orderExampleDict = {
+               'TEMP': Timestamp('2012-05-10T00:00:00'),
+              'EMAIL': 'correo@serv.com',
+               'NAME': 'Nombre Cliente',
+                'TEF': 'Teléfono',
+          'FILE_LINK': 'about:blank',
+            'LAYER_H': '0.0 mm',
+           'RIGIDITY': 0,
+    'COLOUR_MATERIAL': 'Material-Color',
+            'COMMENT': 'Comentario Pedido',
+     'SAYS_IS_MEMBER': False,
+     'ACCEPTS_PAYING': 'Me doy por enterado de los métodos de pago',
+            'PRINTER': 'Impresora?',
+      'LOOKUP_MEMBER': True,
+             'WEIGHT': 'Peso?',
+               'TIME': 'Tiempo?',
+              'PRICE': 'Precio?',
+           'APPROVED': False,
+            'PRINTED': False,
+          'PICKED_UP': False,
+               'PAID': False,
+         'COMPLETION': '0%',
+                'REF': '¿REF?',
+     'REPRO_COMMENTS': ''
+}         

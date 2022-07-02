@@ -54,7 +54,6 @@ BOOLEAN_COLUMNS = [
 ]
 
 INTEGER_COLUMNS = [
-    'RIGIDITY',
     'REF'
 ]
 
@@ -62,20 +61,21 @@ DATETIME_COLUMNS = [
     'TEMP'
 ]
 
+# Retrieved order, dict-like example
 orderExampleDict = {
                'TEMP': Timestamp('2012-05-10T00:00:00'),
               'EMAIL': 'correo@serv.com',
-               'NAME': 'Nombre Cliente',
-                'TEF': 'Teléfono',
+               'NAME': 'Nombre --',
+                'TEF': '---------',
           'FILE_LINK': 'about:blank',
-            'LAYER_H': '0.0 mm',
-           'RIGIDITY': 0,
-    'COLOUR_MATERIAL': 'Material-Color',
-            'COMMENT': 'Comentario Pedido',
+            'LAYER_H': '-.- mm',
+           'RIGIDITY': '-',
+    'COLOUR_MATERIAL': '-- --',
+            'COMMENT': 'Comentario --',
      'SAYS_IS_MEMBER': False,
      'ACCEPTS_PAYING': 'Me doy por enterado de los métodos de pago',
             'PRINTER': 'Impresora?',
-      'LOOKUP_MEMBER': True,
+      'LOOKUP_MEMBER': None,
              'WEIGHT': 'Peso?',
                'TIME': 'Tiempo?',
               'PRICE': 'Precio?',
@@ -84,6 +84,6 @@ orderExampleDict = {
           'PICKED_UP': False,
                'PAID': False,
          'COMPLETION': '0%',
-                'REF': '¿REF?',
+                'REF': '----',
      'REPRO_COMMENTS': ''
 }         

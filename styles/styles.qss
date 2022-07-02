@@ -1,0 +1,16 @@
+/* Styles applied to app */
+
+orderBaseElement {
+    background: #81D4FA;
+}
+
+selectableOrder:hover {
+    background: #BBDEFB;
+    border: 2px solid #9C27B0;
+}
+/* UNUSED: use with selected higlight feature
+selectableOrder[selected='true'] {
+    background: #B2DFDB;
+    border: 4px solid #9C27B0;
+}
+*/

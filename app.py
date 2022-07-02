@@ -27,6 +27,7 @@ from PyQt6.QtWidgets import *
 from googleFlow import googleSpreadSheetInterface
 from panelUI import *
 import constants
+import examples
 
 secretsPath = '.\\secrets'
 configFile  = os.path.join(secretsPath, 'config.toml')
@@ -36,9 +37,11 @@ class widgetApp(QMainWindow):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent= parent)
 
-        self.initSSInterface()
-        
-        self._ordersDict = self.readSS().to_dict('records')
+        # self.initSSInterface()
+        # self._ordersDict = self.readSS().to_dict('index')
+
+        self._ordersDict = examples.ordersExamples
+
         self.panelUI = panelUI(self, self._ordersDict)
         self.initUI()
 
@@ -73,5 +76,9 @@ class widgetApp(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widgetApp = widgetApp(None)
+    # Open the qss styles file and read in the css-alike styling code
+    with open('styles\\styles.qss', 'r') as f:
+        style = f.read()
+        widgetApp.setStyleSheet(style)
     widgetApp.show()
     sys.exit(app.exec())

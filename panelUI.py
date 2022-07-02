@@ -16,18 +16,39 @@ __status__    = "Prototype"
 __doc__       = "This module provides the orders panel with it's interactive elements"
 
 from PyQt6.QtWidgets import *
-from PyQt6 import QtCore
+from PyQt6 import QtCore, QtGui
 
 from constants import orderExampleDict
 
 class panelUI(QWidget):
-    def __init__(self, parent: QWidget | None, ordersDict: dict) -> None:
+    def __init__(self, parent: QWidget | None, ordersDict: dict[dict]) -> None:
         super().__init__(parent= parent)
+        self._ordersDict = ordersDict
+        self._prevSelected = None
+
         self.MainVLayout = QVBoxLayout(self)
 
-        self.scrollableOrders = scrollableOrders(self, ordersDict)
+        self.ordersElementsList = [selectableOrder(self, self.onOrderEvent, rowId, **order) for rowId, order in ordersDict.items()]
+
+        ## Scroll Area
+        self.ordersScroll = QScrollArea(self)
+        self.ordersScroll.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.ordersScroll.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.ordersScroll.setWidgetResizable(True)
+
+        # A QWidget is put into self, the scroll area, which has the vertical layout to be scrolled
+        self.columnWidget = QWidget(self)
+        self.columnLayout = QVBoxLayout(self.columnWidget)
+        self.columnLayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
+        
+        for selectableOrderElement in self.ordersElementsList:
+            self.columnLayout.insertWidget(0, selectableOrderElement)
+
+        self.ordersScroll.setWidget(self.columnWidget)
+        ## !Scroll Area
+
         self.MainVLayout.addWidget(
-            self.scrollableOrders,
+            self.ordersScroll,
             QtCore.Qt.AlignmentFlag.AlignTop
         )
         self.orderAndControls = orderWithControls(self)
@@ -35,27 +56,23 @@ class panelUI(QWidget):
             self.orderAndControls,
             QtCore.Qt.AlignmentFlag.AlignBaseline # Or AlignBottom ?
         )
-        self.setLayout(self.MainVLayout)
 
-class scrollableOrders(QScrollArea):
-    def __init__(self, parent: QWidget | None, orders: dict) -> None:
-        super().__init__(parent= parent)
-        self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.setWidgetResizable(True)
-        # A QWidget is put into self, the scroll area, which has the vertical layout to be scrolled
-        self.columnWidget = QWidget()
-        self.columnLayout = QVBoxLayout()
-        self.columnLayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
-        
-        for order in orders:
-            self.columnLayout.insertWidget(0, orderBaseElement(self, **order))
-        self.columnWidget.setLayout(self.columnLayout)
-        self.setWidget(self.columnWidget)
+    def onOrderEvent(self, rowId):
+        print(f'LOG: {rowId} was clicked')
+        if (self._prevSelected != rowId):
+            selectedData = self._ordersDict[rowId]
+            self._prevSelected = rowId
+        else:
+            selectedData = orderExampleDict
+            self._prevSelected = None
+        self.orderAndControls.changeToOrderData(selectedData)
+        pass
 
 class orderBaseElement(QWidget):
-    def __init__(self, parent: QWidget | None, **properties) -> None:
+    def __init__(self, parent: QWidget | None, **properties: dict) -> None:
         super().__init__(parent= parent)
+
+        # TODO: remove if unused
         # Save properties in case we need them later
         self._properties = properties
 
@@ -64,45 +81,21 @@ class orderBaseElement(QWidget):
 
         self.MainGridLayout = QGridLayout(self)
 
-        self.labelRef      = QLabel(
-            f"#{properties['REF']:0>4n}" if type(properties['REF']) is int else f"#{properties['REF']}",
-            self
-        )
+        # Create labels, apply styles and add to self
+        self.labelRef      = QLabel(self)
+        self.labelName     = QLabel(self)
+        self.labelMember   = QLabel(self)
+        self.labelComment  = QLabel(self)
+        self.labelLayerH   = QLabel(self)
+        self.labelRigidity = QLabel(self)
+        self.labelMaterial = QLabel(self)
         self.labelRef.setStyleSheet(
             "font-weight: bold;"
             "font-size: 18px;"
         )
-        self.labelName     = QLabel(
-            properties['NAME'],
-            self
-        )
         self.labelName.setStyleSheet(
             "font-size: 18px;"
         )
-        self.labelMember   = QLabel(
-            f"Miembro verificado" if(properties['LOOKUP_MEMBER']) else f"Socix sin verificar", 
-            self
-        )
-        self.labelMember.setStyleSheet(
-            f"color: {'black' if(properties['LOOKUP_MEMBER']) else 'red'}"
-        )
-        self.labelComment  = QLabel(
-            properties['COMMENT'],
-            self
-        )
-        self.labelLayerH   = QLabel(
-            f"Altura capa: {properties['LAYER_H']}",
-            self
-        )
-        self.labelRigidity = QLabel(
-            f"Rigidez: {properties['RIGIDITY']}/5",
-            self
-        )
-        self.labelMaterial = QLabel(
-            f"Material: {properties['COLOUR_MATERIAL']}",
-            self
-        )
-
         self.MainGridLayout.addWidget(self.labelRef, 1, 1)
         self.MainGridLayout.addWidget(self.labelName, 1, 2, 1, 2)
         self.MainGridLayout.addWidget(self.labelMember, 2, 1)
@@ -110,11 +103,53 @@ class orderBaseElement(QWidget):
         self.MainGridLayout.addWidget(self.labelLayerH, 3, 1)
         self.MainGridLayout.addWidget(self.labelRigidity, 3, 2)
         self.MainGridLayout.addWidget(self.labelMaterial, 3, 3)
-        self.setStyleSheet("""
-            background-color: #82caaf;
-        """)
-        self.setLayout(self.MainGridLayout)
+
+        # Put label data
+        self.setData(**properties)
+
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
+
+    def setData(self, **properties: dict):
+        self.labelRef.setText(
+            f"#{properties['REF']:0>4n}" if type(properties['REF']) is int else f"#{properties['REF']}"
+        )
+        self.labelName.setText(
+            properties['NAME']
+        )
+        self.labelMember.setText(
+            f"Contrastar miembro" if(properties['LOOKUP_MEMBER'] is None) else
+            f"Miembro verificado" if(properties['LOOKUP_MEMBER']) else f"No verificado"
+        )
+        self.labelMember.setStyleSheet(
+            f"color: {'red' if(not properties['LOOKUP_MEMBER']) else 'black'}"
+        )
+        self.labelComment.setText(
+            properties['COMMENT']
+        )
+        self.labelLayerH.setText(
+            f"Altura capa: {properties['LAYER_H']}"
+        )
+        self.labelRigidity.setText(
+            f"Rigidez: {properties['RIGIDITY']}/5"
+        )
+        self.labelMaterial.setText(
+            f"Material: {properties['COLOUR_MATERIAL']}"
+        )
+
+class selectableOrder(orderBaseElement):
+    def __init__(self, parent: QWidget | None, reportFunc, rowId, **properties: dict) -> None:
+        """
+        Report function: f(rowId)
+        """
+        super().__init__(parent= parent, rowId= rowId, **properties)
+        self._rowId = rowId
+        self._reportF = reportFunc
+    @property
+    def rowId(self):
+        return self._rowId
+    def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:
+        # self.setSelected(not self.property('selected'))
+        self._reportF(self.rowId)
 
 class orderWithControls(QWidget):
     def __init__(self, parent: QWidget | None) -> None:
@@ -128,22 +163,28 @@ class orderWithControls(QWidget):
             self,
             **orderExampleDict
         )
+        self.MainVLayout.addWidget(self.order)
         
-        self.interactiveLayout = QHBoxLayout(self)
+        self.interactiveControls = QWidget(self)
+        self.interactiveLayout = QHBoxLayout(self.interactiveControls)
 
         self._approvedCB = QCheckBox("Aprobado", self)
         self.interactiveLayout.addWidget(self._approvedCB)
+        self._printedCB = QCheckBox("Impreso", self)
+        self.interactiveLayout.addWidget(self._printedCB)
+        self._pickedUpCB = QCheckBox("Recogido", self)
+        self.interactiveLayout.addWidget(self._pickedUpCB)
+        self._paidCB = QCheckBox("Pagado", self)
+        self.interactiveLayout.addWidget(self._paidCB)
 
-        self.MainVLayout.addWidget(self.order)
-        self.MainVLayout.addLayout(self.interactiveLayout)
+        self.MainVLayout.addWidget(self.interactiveControls)        
 
-        self.setStyleSheet("""
-            background-color: #b676b1;
-        """)
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
 
     def changeToOrderData(self, orderDict: dict | None) -> None:
-        self.order = orderBaseElement(
-            self,
-            orderDict if orderDict is None else orderExampleDict
-        )
+        self.order.setData(**orderDict)
+        self._approvedCB.setChecked(orderDict['APPROVED'])
+        self._printedCB.setChecked(orderDict['PRINTED'])
+        self._pickedUpCB.setChecked(orderDict['PICKED_UP'])
+        self._paidCB.setChecked(orderDict['PAID'])
+

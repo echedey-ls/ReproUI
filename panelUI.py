@@ -17,18 +17,20 @@ __doc__       = "This module provides the orders panel with it's interactive ele
 
 from PyQt6.QtWidgets import *
 from PyQt6 import QtCore, QtGui
+from numpy import issubdtype
+import pandas as pd
 
-from constants import orderExampleDict
+from constants import CBId, orderExampleDf
 
 class panelUI(QWidget):
-    def __init__(self, parent: QWidget | None, ordersDict: dict[dict]) -> None:
+    def __init__(self, parent: QWidget | None, ordersDf: pd.DataFrame) -> None:
         super().__init__(parent= parent)
-        self._ordersDict = ordersDict
+        self._ordersDf = ordersDf
         self._prevSelected = None
 
         self.MainVLayout = QVBoxLayout(self)
 
-        self.ordersElementsList = [selectableOrder(self, self.onOrderEvent, rowId, **order) for rowId, order in ordersDict.items()]
+        self.ordersElementsList = [selectableOrder(self, self.onOrderEvent, index, order) for index, order in ordersDf.iterrows()]
 
         ## Scroll Area
         self.ordersScroll = QScrollArea(self)
@@ -51,7 +53,10 @@ class panelUI(QWidget):
             self.ordersScroll,
             QtCore.Qt.AlignmentFlag.AlignTop
         )
-        self.orderAndControls = orderWithControls(self)
+        self.orderAndControls = orderWithControls(
+            self,
+            lambda id, chk: print(f'{CBId(id)} was {"" if chk else "un"}checked')
+        )
         self.MainVLayout.addWidget(
             self.orderAndControls,
             QtCore.Qt.AlignmentFlag.AlignBaseline # Or AlignBottom ?
@@ -60,16 +65,15 @@ class panelUI(QWidget):
     def onOrderEvent(self, rowId):
         print(f'LOG: {rowId} was clicked')
         if (self._prevSelected != rowId):
-            selectedData = self._ordersDict[rowId]
+            selectedData = self._ordersDf.loc[rowId]
             self._prevSelected = rowId
         else:
-            selectedData = orderExampleDict
+            selectedData = orderExampleDf.iloc[0]
             self._prevSelected = None
         self.orderAndControls.changeToOrderData(selectedData)
-        pass
 
 class orderBaseElement(QWidget):
-    def __init__(self, parent: QWidget | None, **properties: dict) -> None:
+    def __init__(self, parent: QWidget | None, properties: pd.Series) -> None:
         super().__init__(parent= parent)
 
         # TODO: remove if unused
@@ -105,13 +109,13 @@ class orderBaseElement(QWidget):
         self.MainGridLayout.addWidget(self.labelMaterial, 3, 3)
 
         # Put label data
-        self.setData(**properties)
+        self.setData(properties)
 
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
 
-    def setData(self, **properties: dict):
+    def setData(self, properties: pd.Series):
         self.labelRef.setText(
-            f"#{properties['REF']:0>4n}" if type(properties['REF']) is int else f"#{properties['REF']}"
+            f"#{properties['REF']:0>4n}" if issubdtype(type(properties['REF']), int) else f"#{properties['REF']}"
         )
         self.labelName.setText(
             properties['NAME']
@@ -137,11 +141,11 @@ class orderBaseElement(QWidget):
         )
 
 class selectableOrder(orderBaseElement):
-    def __init__(self, parent: QWidget | None, reportFunc, rowId, **properties: dict) -> None:
+    def __init__(self, parent: QWidget | None, reportFunc, rowId: int, properties: pd.Series) -> None:
         """
         Report function: f(rowId)
         """
-        super().__init__(parent= parent, rowId= rowId, **properties)
+        super().__init__(parent= parent, properties= properties)
         self._rowId = rowId
         self._reportF = reportFunc
     @property
@@ -152,7 +156,10 @@ class selectableOrder(orderBaseElement):
         self._reportF(self.rowId)
 
 class orderWithControls(QWidget):
-    def __init__(self, parent: QWidget | None) -> None:
+    def __init__(self, parent: QWidget | None, toggledFunc) -> None:
+        """
+        toggledFunc(idButton, checked)
+        """
         super().__init__(parent= parent)
         # Tells the painter to paint all the background
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_StyledBackground, True)
@@ -161,30 +168,45 @@ class orderWithControls(QWidget):
 
         self.order = orderBaseElement(
             self,
-            **orderExampleDict
+            orderExampleDf.iloc[0]
         )
         self.MainVLayout.addWidget(self.order)
         
         self.interactiveControls = QWidget(self)
         self.interactiveLayout = QHBoxLayout(self.interactiveControls)
+        self.CBbuttonGroup = QButtonGroup(self.interactiveControls)
+        self.CBbuttonGroup.setExclusive(False)
+
+        self.CBbuttonGroup.idToggled.connect(toggledFunc)
 
         self._approvedCB = QCheckBox("Aprobado", self)
         self.interactiveLayout.addWidget(self._approvedCB)
+        self.CBbuttonGroup.addButton(self._approvedCB, id=CBId.approved)
         self._printedCB = QCheckBox("Impreso", self)
         self.interactiveLayout.addWidget(self._printedCB)
+        self.CBbuttonGroup.addButton(self._printedCB, id=CBId.printed)
         self._pickedUpCB = QCheckBox("Recogido", self)
         self.interactiveLayout.addWidget(self._pickedUpCB)
+        self.CBbuttonGroup.addButton(self._pickedUpCB, id=CBId.pickedUp)
         self._paidCB = QCheckBox("Pagado", self)
         self.interactiveLayout.addWidget(self._paidCB)
+        self.CBbuttonGroup.addButton(self._paidCB, id=CBId.paid)
 
         self.MainVLayout.addWidget(self.interactiveControls)        
 
         self.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Maximum)
 
-    def changeToOrderData(self, orderDict: dict | None) -> None:
-        self.order.setData(**orderDict)
-        self._approvedCB.setChecked(orderDict['APPROVED'])
-        self._printedCB.setChecked(orderDict['PRINTED'])
-        self._pickedUpCB.setChecked(orderDict['PICKED_UP'])
-        self._paidCB.setChecked(orderDict['PAID'])
+    def changeToOrderData(self, order: pd.Series) -> None:
+        self.order.setData(order)
+        # Disconnect signals before changing CBs statuses
+        # Pair of .disconnect / .connect could be used too, but needs the signal handler as argument. Too lazy to try that.
+        self.CBbuttonGroup.blockSignals(True)
+
+        self._approvedCB.setChecked(order['APPROVED'])
+        self._printedCB.setChecked(order['PRINTED'])
+        self._pickedUpCB.setChecked(order['PICKED_UP'])
+        self._paidCB.setChecked(order['PAID'])
+
+        # Enable signals
+        self.CBbuttonGroup.blockSignals(False)
 

@@ -15,7 +15,10 @@ __version__   = "0.1.0"
 __status__    = "Prototype"
 __doc__       = "This file contains constants used in the app"
 
-from pandas import Timestamp
+from enum import IntEnum, unique
+from numpy import datetime64
+
+from pandas import DataFrame, Timestamp
 
 # Column tags to rename terrible auto-generated form column titles
 COLUMN_NAMES = [
@@ -43,7 +46,33 @@ COLUMN_NAMES = [
     'REF',
     'REPRO_COMMENTS'
 ]
-
+# Columns to convert the dtype
+COLUMN_DTYPES = {
+            'TEMP': datetime64,
+            'EMAIL': None,
+            'NAME': None,
+            'TEF': None,
+        'FILE_LINK': None,
+        'LAYER_H': None,
+        'RIGIDITY': int,
+'COLOUR_MATERIAL': None,
+        'COMMENT': None,
+    'SAYS_IS_MEMBER': None, # bool,
+    'ACCEPTS_PAYING': None,
+        'PRINTER': None,
+    'LOOKUP_MEMBER': None, # bool,
+            'WEIGHT': None,
+            'TIME': None,
+            'PRICE': None,
+        'APPROVED': None, # bool,
+        'PRINTED': None, # bool,
+        'PICKED_UP': None, # bool,
+            'PAID': None, # bool,
+        'COMPLETION': None,
+            'REF': int,
+    'REPRO_COMMENTS': None
+}
+# Booleans are parsed with a custom parser
 BOOLEAN_COLUMNS = [
     'SAYS_IS_MEMBER',
     'LOOKUP_MEMBER',
@@ -53,16 +82,17 @@ BOOLEAN_COLUMNS = [
     'PAID'
 ]
 
-INTEGER_COLUMNS = [
-    'REF'
-]
+# Enum to interpret checkboxes in orderWithControls
+@unique
+class CBId(IntEnum):
+    approved = 1
+    printed  = 2
+    pickedUp = 3
+    paid     = 4
 
-DATETIME_COLUMNS = [
-    'TEMP'
-]
-
-# Retrieved order, dict-like example
-orderExampleDict = {
+# Retrieved order, dataframe example
+orderExampleDf = DataFrame.from_dict([
+    {
                'TEMP': Timestamp('2012-05-10T00:00:00'),
               'EMAIL': 'correo@serv.com',
                'NAME': 'Nombre --',
@@ -86,4 +116,5 @@ orderExampleDict = {
          'COMPLETION': '0%',
                 'REF': '----',
      'REPRO_COMMENTS': ''
-}         
+    }
+])

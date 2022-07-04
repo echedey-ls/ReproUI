@@ -1,9 +1,9 @@
 # Some examples to bypass the spreadsheet reader, so we can test offline
 
-from pandas import Timestamp
+from pandas import DataFrame, Timestamp
 
-ordersExamples = {
-    '0': {
+ordersExamples = DataFrame.from_dict([
+    {
                'TEMP': Timestamp('2012-05-10T00:00:00'),
               'EMAIL': 'correo@serv.com',
                'NAME': 'Jose María',
@@ -28,7 +28,7 @@ ordersExamples = {
                 'REF': 1,
      'REPRO_COMMENTS': ''
     },
-    '1': {
+    {
                'TEMP': Timestamp('2022-05-10T00:00:00'),
               'EMAIL': 'correo2@serv2.com',
                'NAME': 'Maribí',
@@ -53,4 +53,4 @@ ordersExamples = {
                 'REF': 2,
      'REPRO_COMMENTS': ''
     }
-}
+])

@@ -37,12 +37,12 @@ class widgetApp(QMainWindow):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent= parent)
 
-        # self.initSSInterface()
-        # self._ordersDict = self.readSS().to_dict('index')
+        self.initSSInterface()
+        self._ordersDf = self.readSS()
 
-        self._ordersDict = examples.ordersExamples
+        # self._ordersDf = examples.ordersExamples # Offline bypass
 
-        self.panelUI = panelUI(self, self._ordersDict)
+        self.panelUI = panelUI(self, self._ordersDf)
         self.initUI()
 
     def initUI(self) -> None:
@@ -63,15 +63,12 @@ class widgetApp(QMainWindow):
         ordersDf = pd.DataFrame(
             columns= constants.COLUMN_NAMES,
             # Make sure input is all same length as column names [23]
+            # First row (column names) is ignored
             data= [ order+[''] if len(order)==22 else order for order in ordersRaw[1:] ]
         )
         for booleanColumn in constants.BOOLEAN_COLUMNS:
             ordersDf[booleanColumn] = ordersDf[booleanColumn].map({'TRUE': True, 'FALSE': False, '': False})
-        for integerColumn in constants.INTEGER_COLUMNS:
-            ordersDf[integerColumn] = ordersDf[integerColumn].astype(int)
-        for datetimeDolumn in constants.DATETIME_COLUMNS:
-            ordersDf[datetimeDolumn] = ordersDf[datetimeDolumn].astype(datetime64)
-        return ordersDf
+        return ordersDf.astype(constants.COLUMN_DTYPES)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

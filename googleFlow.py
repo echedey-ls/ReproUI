@@ -1,3 +1,6 @@
+# Original file by Google LLC at https://github.com/googleworkspace/python-samples/blob/master/sheets/quickstart/quickstart.py
+# Modified by @echedey-ls
+
 # Copyright 2018 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +16,7 @@
 # limitations under the License.
 
 import os.path
+import threading
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -25,6 +29,7 @@ class googleSpreadSheetInterface(object):
         self._secretsPath   = secretsPath
         self._spreadSheetId = spreadSheetId
         self._scopes   = ['https://www.googleapis.com/auth/spreadsheets']
+        self._actionUnderway = threading.Lock()
         ## CREDENTIALS INITIALIZATION
         self._credsPath = os.path.join(self._secretsPath, 'credentials.json')
         self._tokenPath = os.path.join(self._secretsPath, 'token.json')
@@ -47,23 +52,49 @@ class googleSpreadSheetInterface(object):
             # Save the credentials for the next run
             with open(self._tokenPath, 'w') as token:
                 token.write(self._creds.to_json())
-
-    def readRange(self, range) -> list[list]:
+    def readRange(self, range: str) -> list[list]:
+        retVal = None
         try:
+            self._actionUnderway.acquire()
             service = build('sheets', 'v4', credentials=self._creds)
 
             # Call the Sheets API
             sheet = service.spreadsheets()
             result = sheet.values().get(
                 spreadsheetId= self._spreadSheetId,
-                range= range
+                range= range,
+                majorDimension= 'ROWS'
             ).execute()
             values = result.get('values', [])
 
             if not values:
                 print('No data found.')
-                return
-            return values
-        except HttpError as err:
+            retVal = values
+        except Exception as err:
             print(err)
-            return None
+        finally:
+            self._actionUnderway.release()
+            return retVal
+
+    def updateRange(self, range: str, values: list[list]) -> dict | None:
+        retVal = None
+        try:
+            self._actionUnderway.acquire()
+            service = build('sheets', 'v4', credentials=self._creds)
+
+            # Call the Sheets API
+            sheet = service.spreadsheets()
+            retVal = sheet.values().update(
+                spreadsheetId= self._spreadSheetId,
+                range= range,
+                valueInputOption = 'USER_ENTERED',
+                body= {
+                    'values': values,
+                    'majorDimension': 'ROWS'
+                }
+            ).execute()
+        except Exception as err:
+            print(err)
+        finally:
+            self._actionUnderway.release()
+            return retVal

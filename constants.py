@@ -18,7 +18,11 @@ __doc__       = "This file contains constants used in the app"
 from enum import IntEnum, unique
 from numpy import datetime64
 
-from pandas import DataFrame, Timestamp
+from pandas import Series, Timestamp
+
+# Timers delays
+DB_UPDATE_DELAY = 10*1000 # 10 secs
+DB_RETRIEVE_INTERVAL = 60*60*1000 # 1 hour
 
 # Column tags to rename terrible auto-generated form column titles
 COLUMN_NAMES = [
@@ -89,10 +93,15 @@ class CBId(IntEnum):
     printed  = 2
     pickedUp = 3
     paid     = 4
+CBid2col = {
+    CBId.approved: 'APPROVED',
+    CBId.printed: 'PRINTED',
+    CBId.pickedUp: 'PICKED_UP',
+    CBId.paid: 'PAID'
+}
 
-# Retrieved order, dataframe example
-orderExampleDf = DataFrame.from_dict([
-    {
+# Placeholder order
+ORDER_PLACEHOLDER_SERIES = Series({
                'TEMP': Timestamp('2012-05-10T00:00:00'),
               'EMAIL': 'correo@serv.com',
                'NAME': 'Nombre --',
@@ -116,5 +125,4 @@ orderExampleDf = DataFrame.from_dict([
          'COMPLETION': '0%',
                 'REF': '----',
      'REPRO_COMMENTS': ''
-    }
-])
+})

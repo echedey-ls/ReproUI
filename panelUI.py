@@ -13,24 +13,29 @@ __credits__   = ["Echedey Luis Álvarez"]
 __license__   = "GPL v3"
 __version__   = "0.1.0"
 __status__    = "Prototype"
-__doc__       = "This module provides the orders panel with it's interactive elements"
+__doc__       = "This module provides the orders panel with its interactive elements"
 
 from PyQt6.QtWidgets import *
 from PyQt6 import QtCore, QtGui
+from PyQt6.QtCore import pyqtSlot
 from numpy import issubdtype
 import pandas as pd
 
-from constants import CBId, orderExampleDf
+from constants import CBId, ORDER_PLACEHOLDER_SERIES
 
 class panelUI(QWidget):
-    def __init__(self, parent: QWidget | None, ordersDf: pd.DataFrame) -> None:
+    def __init__(self, parent: QWidget | None, interactionFunc) -> None:
+        """
+        interactionFunc is in form f(rowId, CBId, checked)
+        """
         super().__init__(parent= parent)
-        self._ordersDf = ordersDf
+        self._ordersDf = None
+        self._interactF = interactionFunc
+
+        self._rowId = None
         self._prevSelected = None
 
         self.MainVLayout = QVBoxLayout(self)
-
-        self.ordersElementsList = [selectableOrder(self, self.onOrderEvent, index, order) for index, order in ordersDf.iterrows()]
 
         ## Scroll Area
         self.ordersScroll = QScrollArea(self)
@@ -42,35 +47,57 @@ class panelUI(QWidget):
         self.columnWidget = QWidget(self)
         self.columnLayout = QVBoxLayout(self.columnWidget)
         self.columnLayout.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
-        
-        for selectableOrderElement in self.ordersElementsList:
-            self.columnLayout.insertWidget(0, selectableOrderElement)
-
         self.ordersScroll.setWidget(self.columnWidget)
-        ## !Scroll Area
 
         self.MainVLayout.addWidget(
             self.ordersScroll,
             QtCore.Qt.AlignmentFlag.AlignTop
         )
+        ## !Scroll Area
+        ## Order & Controls
         self.orderAndControls = orderWithControls(
             self,
-            lambda id, chk: print(f'{CBId(id)} was {"" if chk else "un"}checked')
+            self.interactionWrapper
         )
         self.MainVLayout.addWidget(
             self.orderAndControls,
             QtCore.Qt.AlignmentFlag.AlignBaseline # Or AlignBottom ?
         )
+        ## !Order & Controls
 
-    def onOrderEvent(self, rowId):
+    def onOrderClickEvent(self, rowId):
         print(f'LOG: {rowId} was clicked')
         if (self._prevSelected != rowId):
             selectedData = self._ordersDf.loc[rowId]
             self._prevSelected = rowId
+            self._rowId = rowId
         else:
-            selectedData = orderExampleDf.iloc[0]
+            selectedData = ORDER_PLACEHOLDER_SERIES
             self._prevSelected = None
+            self._rowId = None
         self.orderAndControls.changeToOrderData(selectedData)
+
+    def setOrders(self, ordersDf: pd.DataFrame):
+        # Clear selected order data and save to class
+        self.orderAndControls.changeToOrderData(ORDER_PLACEHOLDER_SERIES)
+        self._ordersDf = ordersDf
+        # Delete all orders
+        for widget in self.columnLayout.children():
+            self.columnLayout.removeWidget(widget)
+            widget.setParent(None)
+            widget.deleteLater()
+        # Create a list of orders
+        self.ordersElementsList = [selectableOrder(self, self.onOrderClickEvent, index, order) for index, order in ordersDf.iterrows()]
+        # Add new orders
+        for selectableOrderElement in self.ordersElementsList:
+            self.columnLayout.insertWidget(0, selectableOrderElement)
+
+    @property
+    def rowId(self):
+        return self._rowId
+
+    def interactionWrapper(self, wId, wChecked):
+        self._interactF(self.rowId, wId, wChecked)
 
 class orderBaseElement(QWidget):
     def __init__(self, parent: QWidget | None, properties: pd.Series) -> None:
@@ -158,7 +185,7 @@ class selectableOrder(orderBaseElement):
 class orderWithControls(QWidget):
     def __init__(self, parent: QWidget | None, toggledFunc) -> None:
         """
-        toggledFunc(idButton, checked)
+        toggledFunc = f(cbId, cbChecked)
         """
         super().__init__(parent= parent)
         # Tells the painter to paint all the background
@@ -168,7 +195,7 @@ class orderWithControls(QWidget):
 
         self.order = orderBaseElement(
             self,
-            orderExampleDf.iloc[0]
+            ORDER_PLACEHOLDER_SERIES
         )
         self.MainVLayout.addWidget(self.order)
         

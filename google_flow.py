@@ -1,4 +1,5 @@
-# Original file by Google LLC at https://github.com/googleworkspace/python-samples/blob/master/sheets/quickstart/quickstart.py
+# Original file by Google LLC at
+# https://github.com/googleworkspace/python-samples/blob/master/sheets/quickstart/quickstart.py
 # Modified by @echedey-ls
 
 # Copyright 2018 Google LLC
@@ -22,73 +23,80 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
-class googleSpreadSheetInterface(object):
-    def __init__(self, *, secretsPath, spreadSheetId) -> None:
-        self._secretsPath   = secretsPath
-        self._spreadSheetId = spreadSheetId
-        self._scopes   = ['https://www.googleapis.com/auth/spreadsheets']
-        self._actionUnderway = threading.Lock()
-        ## CREDENTIALS INITIALIZATION
-        self._credsPath = os.path.join(self._secretsPath, 'credentials.json')
-        self._tokenPath = os.path.join(self._secretsPath, 'token.json')
+
+class GoogleSpreadSheetInterface(object):
+    # pylint: disable=no-member
+    def __init__(self, *, secrets_path, spreadsheet_id) -> None:
+        self._secrets_path = secrets_path
+        self._spreadsheet_id = spreadsheet_id
+        self._scopes = ['https://www.googleapis.com/auth/spreadsheets']
+        self._action_underway = threading.Lock()
+        # CREDENTIALS INITIALIZATION
+        self._creds_path = os.path.join(self._secrets_path, 'credentials.json')
+        self._token_path = os.path.join(self._secrets_path, 'token.json')
         self._creds = None
-        # The file token.json stores the user's access and refresh tokens, and is
-        # created automatically when the authorization flow completes for the first
-        # time.
-        if os.path.exists(self._tokenPath):
-            self._creds = Credentials.from_authorized_user_file(self._tokenPath, self._scopes)
+        # The file token.json stores the user's access and refresh tokens,
+        # and is created automatically when the authorization flow completes
+        # for the first time.
+        if os.path.exists(self._token_path):
+            self._creds = Credentials.from_authorized_user_file(
+                self._token_path,
+                self._scopes
+            )
         # If there are no (valid) credentials available, let the user log in.
         if not self._creds or not self._creds.valid:
-            if self._creds and self._creds.expired and self._creds.refresh_token:
+            if (self._creds
+                    and self._creds.expired
+                    and self._creds.refresh_token):
                 self._creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    self._credsPath, 
+                    self._creds_path,
                     self._scopes
                 )
                 self._creds = flow.run_local_server(port=0)
             # Save the credentials for the next run
-            with open(self._tokenPath, 'w') as token:
+            with open(self._token_path, 'w', encoding='utf-8') as token:
                 token.write(self._creds.to_json())
-    def readRange(self, range: str) -> list[list]:
-        retVal = None
+
+    def read_range(self, range_: str) -> list[list]:
+        ret_value = None
         try:
-            self._actionUnderway.acquire()
+            self._action_underway.acquire()
             service = build('sheets', 'v4', credentials=self._creds)
 
             # Call the Sheets API
             sheet = service.spreadsheets()
             result = sheet.values().get(
-                spreadsheetId= self._spreadSheetId,
-                range= range,
-                majorDimension= 'ROWS'
+                spreadsheetId=self._spreadsheet_id,
+                range=range_,
+                majorDimension='ROWS'
             ).execute()
             values = result.get('values', [])
 
             if not values:
                 print('No data found.')
-            retVal = values
+            ret_value = values
         except Exception as err:
             print(err)
         finally:
-            self._actionUnderway.release()
-            return retVal
+            self._action_underway.release()
+            return ret_value
 
-    def updateRange(self, range: str, values: list[list]) -> dict | None:
-        retVal = None
+    def update_range(self, range_: str, values: list[list]) -> dict | None:
+        ret_value = None
         try:
-            self._actionUnderway.acquire()
+            self._action_underway.acquire()
             service = build('sheets', 'v4', credentials=self._creds)
 
             # Call the Sheets API
             sheet = service.spreadsheets()
-            retVal = sheet.values().update(
-                spreadsheetId= self._spreadSheetId,
-                range= range,
-                valueInputOption = 'USER_ENTERED',
-                body= {
+            ret_value = sheet.values().update(
+                spreadsheetId=self._spreadsheet_id,
+                range=range_,
+                valueInputOption='USER_ENTERED',
+                body={
                     'values': values,
                     'majorDimension': 'ROWS'
                 }
@@ -96,5 +104,5 @@ class googleSpreadSheetInterface(object):
         except Exception as err:
             print(err)
         finally:
-            self._actionUnderway.release()
-            return retVal
+            self._action_underway.release()
+            return ret_value

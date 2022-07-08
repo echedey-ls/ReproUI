@@ -1,141 +1,162 @@
 """
      This file is part of ReproUI.
 
-    ReproUI is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+    ReproUI is free software: you can redistribute it and/or modify it under
+    the terms of the GNU General Public License as published by the Free
+    Software Foundation, either version 3 of the License, or (at your option)
+    any later version.
 
-    ReproUI is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+    ReproUI is distributed in the hope that it will be useful, but WITHOUT ANY
+    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+    FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+    details.
 
-    You should have received a copy of the GNU General Public License along with ReproUI. If not, see <https://www.gnu.org/licenses/>. 
+    You should have received a copy of the GNU General Public License along
+    with ReproUI. If not, see <https://www.gnu.org/licenses/>.
 """
-__author__    = "Echedey Luis Álvaerz"
+__author__ = "Echedey Luis Álvaerz"
 __copyright__ = "Copyright 2022, Echedey Luis Álvarez"
-__credits__   = ["Echedey Luis Álvarez"]
-__license__   = "GPL v3"
-__version__   = "0.1.0"
-__status__    = "Prototype"
-__doc__       = "ReproUI is a GUI application designed to aid in the 3D printing service of CREA, UPM. It accesses a Google Spreadsheet and shows a list of pending orders"
+__credits__ = ["Echedey Luis Álvarez"]
+__license__ = "GPL v3"
+__version__ = "0.1.0"
+__status__ = "Prototype"
+__doc__ = """ReproUI is a GUI application designed to aid in the 3D printing
+service of CREA, UPM. It accesses a Google Spreadsheet and shows a list of
+pending orders"""
 
 import os
 import sys
 import tomli
 
 import pandas as pd
-from PyQt6.QtCore import Qt, QSize, QTimer, pyqtSlot
-from PyQt6.QtWidgets import *
+from PyQt6.QtCore import Qt, QTimer, pyqtSlot
+from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
 
-from googleFlow import googleSpreadSheetInterface
-from panelUI import *
+from google_flow import GoogleSpreadSheetInterface
+from panel_ui import PanelUI
 import constants
-import examples
 
-secretsPath = '.\\secrets'
-configFile  = os.path.join(secretsPath, 'config.toml')
-dataRange   = 'HojaA!A2:W' # First row is col names
+SECRETS_PATH = '.\\secrets'
+CONFIG_FILE = os.path.join(SECRETS_PATH, 'config.toml')
+DATA_RANGE = 'HojaA!A2:W'  # First row is col names
 
-class widgetApp(QMainWindow):
+
+class WidgetApp(QMainWindow):
     def __init__(self, parent: QWidget | None) -> None:
-        super().__init__(parent= parent)
+        super().__init__(parent=parent)
 
         self.setWindowTitle('ReproUI')
 
-        self.initTimers()
+        self.init_timers()
 
-        self.panelUI = panelUI(
+        self.panel_ui = PanelUI(
             self,
-            self.interactionOnOrder
+            self.order_interaction
         )
-        self.setCentralWidget(self.panelUI)
-        self.initSSInterface()
-        
-        self.getOrdersAndUpdatePanelUI()
+        self.setCentralWidget(self.panel_ui)
+        self.init_ss_interface()
 
-    def initTimers(self) -> None:
-        self._updateDelayTimer= QTimer(self)
-        self._updateDelayTimer.setSingleShot(True)
-        self._updateDelayTimer.setTimerType(Qt.TimerType.VeryCoarseTimer)
-        self._updateDelayTimer.setInterval(constants.DB_UPDATE_DELAY)
-        self._updateDelayTimer.timeout.connect(self.updaterSlot)
+        self.fetch_orders_and_update_panel()
 
-        self._retrieveIntervalTimer= QTimer()
-        self._retrieveIntervalTimer.setSingleShot(False)
-        self._retrieveIntervalTimer.setTimerType(Qt.TimerType.VeryCoarseTimer)
-        self._retrieveIntervalTimer.setInterval(constants.DB_RETRIEVE_INTERVAL)
-        self._retrieveIntervalTimer.timeout.connect(self.retrieverSlot)
+    def init_timers(self) -> None:
+        self._update_delay_timer = QTimer(self)
+        self._update_delay_timer.setSingleShot(True)
+        self._update_delay_timer.setTimerType(Qt.TimerType.VeryCoarseTimer)
+        self._update_delay_timer.setInterval(constants.DB_UPDATE_DELAY)
+        self._update_delay_timer.timeout.connect(self.updater_slot)
+
+        self._retrieve_interval_timer = QTimer()
+        self._retrieve_interval_timer.setSingleShot(False)
+        self._retrieve_interval_timer.setTimerType(Qt.TimerType.VeryCoarseTimer)
+        self._retrieve_interval_timer.setInterval(constants.DB_RETRIEVE_INTERVAL)
+        self._retrieve_interval_timer.timeout.connect(self.retriever_slot)
 
     # Google SpreadSheet functions
-    def initSSInterface(self) -> None:
-        if( os.path.exists(configFile) and os.path.isfile(configFile) ):
-            with open(configFile, 'rb') as cfFile:
-                config = tomli.load(cfFile)
+    def init_ss_interface(self) -> None:
+        if(os.path.exists(CONFIG_FILE) and os.path.isfile(CONFIG_FILE)):
+            with open(CONFIG_FILE, 'rb') as cf_file:
+                config = tomli.load(cf_file)
         else:
             raise IOError('Configuration file not found')
-        self._sSheetInter = googleSpreadSheetInterface(
-            secretsPath= secretsPath, 
-            spreadSheetId= config['SPREADSHEET_ID']
+        self._ssheet_inter = GoogleSpreadSheetInterface(
+            secrets_path=SECRETS_PATH,
+            spreadsheet_id=config['SPREADSHEET_ID']
         )
 
-    def readSS(self) -> pd.DataFrame:
+    def read_ss(self) -> pd.DataFrame:
         try:
-            ordersRaw = self._sSheetInter.readRange(dataRange)
-            ordersDf = pd.DataFrame(
-                columns= constants.COLUMN_NAMES,
+            orders_raw = self._ssheet_inter.read_range(DATA_RANGE)
+            orders_df = pd.DataFrame(
+                columns=constants.COLUMN_NAMES,
                 # Make sure input is all same length as column names [23]
-                data= [ order+[''] if len(order)==22 else order for order in ordersRaw ]
-            )
-            for booleanColumn in constants.BOOLEAN_COLUMNS:
-                ordersDf[booleanColumn] = ordersDf[booleanColumn].map({'TRUE': True, 'FALSE': False, '': False})
-            ordersDf = (ordersDf
-                .astype(constants.COLUMN_DTYPES)
-                .dropna(thresh= 18)
-            )
+                data=[order+[''] if len(order) == 22 else order
+                      for order in orders_raw]
+                )
+            for boolean_column in constants.BOOLEAN_COLUMNS:
+                orders_df[boolean_column] = orders_df[boolean_column].map(
+                    {'TRUE': True, 'FALSE': False, '': False}
+                    )
+            orders_df = (orders_df
+                        .astype(constants.COLUMN_DTYPES)
+                        .dropna(thresh=18)
+                        )
+
             # Yeah, we shouldn't show all the names. Privacy protection first.
             def privacy_protect_name(name):
-                nameSplit = name.split()
-                return ' '.join([nameSplit[0]] + [nm[:1].upper()+'.' for nm in nameSplit[1:]])
-            ordersDf['NAME'] = ordersDf['NAME'].map(privacy_protect_name)
-            return ordersDf
+                name_splitted = name.split()
+                return ' '.join([name_splitted[0]] + [nm[:1].upper()+'.'
+                                for nm in name_splitted[1:]])
+            orders_df['NAME'] = orders_df['NAME'].map(privacy_protect_name)
+            return orders_df
 
-        except TypeError as e:
+        except TypeError as err:
             print('Error reading orders. Check database integrity.')
+            print(err)
 
-    def updateSS(self, ordersDf: pd.DataFrame):
-        self._sSheetInter.updateRange(
-            range= dataRange,
-            values= ordersDf.values.astype(str).tolist()
+    def update_ss(self, orders_df: pd.DataFrame):
+        self._ssheet_inter.update_range(
+            range_=DATA_RANGE,
+            values=orders_df.values.astype(str).tolist()
         )
 
     # Orders
     @pyqtSlot()
-    def updaterSlot(self):
+    def updater_slot(self):
         """
-        Wrapper to call .updateSS(orders) with the dataframe argument
+        Wrapper to call .update_ss(orders) with the dataframe argument
         """
         print('Timer shot')
-        self.updateSS(self._ordersDf)
+        self.update_ss(self._orders_df)
 
-    def getOrdersAndUpdatePanelUI(self): # I like to think about this as a self-explanatory name
-        self._ordersDf = self.readSS()
-        self.panelUI.setOrders(self._ordersDf)
+    def fetch_orders_and_update_panel(self):
+        self._orders_df = self.read_ss()
+        self.panel_ui.set_orders(self._orders_df)
 
     @pyqtSlot()
-    def retrieverSlot(self):
+    def retriever_slot(self):
         """
-        Wrapper to call .readSS() periodically and update local orders on the app
+        Wrapper to call .read_ss() periodically and update local orders on the
+        app
         """
-        self.getOrdersAndUpdatePanelUI()
+        self.fetch_orders_and_update_panel()
 
-    def interactionOnOrder(self, row, cbId: CBId, cbChecked: bool):
+    def order_interaction(self, row, cb_id: int, cb_checked: bool):
+        """
+        cb_id is an `int`, but is inverse-searched for the `constants.CBId` equivalent
+        """
         if row is not None:
-            self._ordersDf.loc[row, constants.CBid2col[cbId]] = cbChecked
-            self._updateDelayTimer.start()
-        print(f'Row {row}, CB {constants.CBid2col[cbId]} was set to {cbChecked}') # TODO: Remove Debug Line
+            self._orders_df.loc[row, cb_id] = cb_checked
+            self._update_delay_timer.start()
+        print(f'''Row {row}, CB {cb_id.name} was set to
+            {cb_checked}''')  # TODO: Remove Debug Line
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    widgetApp = widgetApp(None)
+    widget_app = WidgetApp(None)
     # Open the qss styles file and read in the css-alike styling code
-    with open('styles\\styles.qss', 'r') as f:
+    with open('styles\\styles.qss', 'r', encoding='utf-8') as f:
         style = f.read()
-        widgetApp.setStyleSheet(style)
-    widgetApp.show()
+        widget_app.setStyleSheet(style)
+    widget_app.show()
     sys.exit(app.exec())

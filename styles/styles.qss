@@ -1,10 +1,10 @@
 /* Styles applied to app */
 
-orderBaseElement {
+OrderBaseElement {
     background: #81D4FA;
 }
 
-selectableOrder:hover {
+SelectableOrder:hover {
     background: #BBDEFB;
     border: 2px solid #9C27B0;
 }

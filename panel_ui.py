@@ -201,7 +201,8 @@ class SelectableOrder(OrderBaseElement):
         return self._row_id
 
     def mouseReleaseEvent(self, a0: QtGui.QMouseEvent) -> None:  # pylint: disable=invalid-name, missing-function-docstring
-        self._report_fnc(self.row_id)
+        if self.rect().contains(a0.pos()):
+            self._report_fnc(self.row_id)
 
 
 class OrderWithControls(QWidget):

@@ -41,38 +41,44 @@ CONFIG_FILE = os.path.join(SECRETS_PATH, 'config.toml')
 DATA_RANGE = 'HojaA!A2:W'  # First row is col names
 
 
-class WidgetApp(QMainWindow):
+class ReproUIApp(QMainWindow):
+    """Main class app of ReproUI"""
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent=parent)
 
         self.setWindowTitle('ReproUI')
 
-        self.init_timers()
+        self._init_timers()
 
         self.panel_ui = PanelUI(
             self,
-            self.order_interaction
+            self._order_interaction
         )
         self.setCentralWidget(self.panel_ui)
-        self.init_ss_interface()
+        self._init_ss_interface()
 
-        self.fetch_orders_and_update_panel()
+        self._fetch_orders_and_update_panel()
 
-    def init_timers(self) -> None:
+        # Open the qss styles file and read in the css-alike styling code
+        with open('assets\\styles\\styles.qss', 'r', encoding='utf-8') as f:
+            style = f.read()
+            self.setStyleSheet(style)
+
+    def _init_timers(self) -> None:
         self._update_delay_timer = QTimer(self)
         self._update_delay_timer.setSingleShot(True)
         self._update_delay_timer.setTimerType(Qt.TimerType.VeryCoarseTimer)
         self._update_delay_timer.setInterval(constants.DB_UPDATE_DELAY)
-        self._update_delay_timer.timeout.connect(self.updater_slot)
+        self._update_delay_timer.timeout.connect(self._updater_slot)
 
         self._retrieve_interval_timer = QTimer()
         self._retrieve_interval_timer.setSingleShot(False)
         self._retrieve_interval_timer.setTimerType(Qt.TimerType.VeryCoarseTimer)
         self._retrieve_interval_timer.setInterval(constants.DB_RETRIEVE_INTERVAL)
-        self._retrieve_interval_timer.timeout.connect(self.retriever_slot)
+        self._retrieve_interval_timer.timeout.connect(self._retriever_slot)
 
     # Google SpreadSheet functions
-    def init_ss_interface(self) -> None:
+    def _init_ss_interface(self) -> None:
         if(os.path.exists(CONFIG_FILE) and os.path.isfile(CONFIG_FILE)):
             with open(CONFIG_FILE, 'rb') as cf_file:
                 config = tomli.load(cf_file)
@@ -83,7 +89,7 @@ class WidgetApp(QMainWindow):
             spreadsheet_id=config['SPREADSHEET_ID']
         )
 
-    def read_ss(self) -> pd.DataFrame:
+    def _read_ss(self) -> pd.DataFrame:
         try:
             orders_raw = self._ssheet_inter.read_range(DATA_RANGE)
             orders_df = pd.DataFrame(
@@ -112,8 +118,9 @@ class WidgetApp(QMainWindow):
         except TypeError as err:
             print('Error reading orders. Check database integrity.')
             print(err)
+            return None
 
-    def update_ss(self, orders_df: pd.DataFrame):
+    def _update_ss(self, orders_df: pd.DataFrame):
         self._ssheet_inter.update_range(
             range_=DATA_RANGE,
             values=orders_df.values.astype(str).tolist()
@@ -121,40 +128,38 @@ class WidgetApp(QMainWindow):
 
     # Orders
     @pyqtSlot()
-    def updater_slot(self):
+    def _updater_slot(self):
         """
-        Wrapper to call .update_ss(orders) with the dataframe argument
+        Wrapper to call ._update_ss(orders) with the dataframe argument
         """
         print('Timer shot')
-        self.update_ss(self._orders_df)
+        self._update_ss(self._orders_df)
 
-    def fetch_orders_and_update_panel(self):
-        self._orders_df = self.read_ss()
+    def _fetch_orders_and_update_panel(self):
+        self._orders_df = self._read_ss()
         self.panel_ui.set_orders(self._orders_df)
 
     @pyqtSlot()
-    def retriever_slot(self):
+    def _retriever_slot(self):
         """
-        Wrapper to call .read_ss() periodically and update local orders on the
+        Wrapper to call ._read_ss() periodically and update local orders on the
         app
         """
-        self.fetch_orders_and_update_panel()
+        self._fetch_orders_and_update_panel()
 
-    def order_interaction(self, row, cb_id: int, cb_checked: bool):
+    def _order_interaction(self, row, cb_id: int, cb_checked: bool):
         """
         cb_id is an `int`, but is inverse-searched for the `constants.CBId` equivalent
         """
         if row is not None:
             self._orders_df.loc[row, cb_id] = cb_checked
             self._update_delay_timer.start()
+        print(f'Row {row}, CB {constants.CBId(cb_id).name} was set to '
+              f'{cb_checked}')  # TODO: Remove Debug Line
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    widget_app = WidgetApp(None)
-    # Open the qss styles file and read in the css-alike styling code
-    with open('styles\\styles.qss', 'r', encoding='utf-8') as f:
-        style = f.read()
-        widget_app.setStyleSheet(style)
-    widget_app.show()
+    reproui_app = ReproUIApp(None)
+    reproui_app.show()
     sys.exit(app.exec())

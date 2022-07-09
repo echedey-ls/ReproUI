@@ -33,6 +33,7 @@ from constants import CBId, ORDER_PLACEHOLDER_SERIES
 
 
 class PanelUI(QWidget):
+    """Scroll area and interactive elements which show the orders"""
     def __init__(self, parent: QWidget | None, interactionFunc) -> None:
         """
         interactionFunc is in form f(row_id, CBId, checked)
@@ -69,9 +70,9 @@ class PanelUI(QWidget):
         )
         # !Scroll Area
         # Order & Controls
-        self.orders_and_controls = OrderWithControls(
+        self.orders_and_controls = _OrderWithControls(
             self,
-            self.interaction_wrapper
+            self._interaction_wrapper
         )
         self.main_v_layout.addWidget(
             self.orders_and_controls,
@@ -79,7 +80,7 @@ class PanelUI(QWidget):
         )
         # !Order & Controls
 
-    def on_order_click_event(self, row_id):
+    def _on_order_click_event(self, row_id):
         print(f'LOG: {row_id} was clicked')
         if self._prev_selected != row_id:
             selected_data = self._orders_df.loc[row_id]
@@ -92,6 +93,10 @@ class PanelUI(QWidget):
         self.orders_and_controls.change_order(selected_data)
 
     def set_orders(self, orders_df: pd.DataFrame):
+        """
+        Given an orders DataFrame, create the orders widgets and add them to
+        the GUI
+        """
         # Clear selected order data and save to class
         self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES)
         self._orders_df = orders_df
@@ -102,7 +107,7 @@ class PanelUI(QWidget):
             widget.deleteLater()
         # Create a list of orders
         self.orders_elements_list = [
-            SelectableOrder(self, self.on_order_click_event, index, order)
+            _SelectableOrder(self, self._on_order_click_event, index, order)
             for index, order in orders_df.iterrows()]
         # Add new orders
         for selectable_order in self.orders_elements_list:
@@ -110,13 +115,17 @@ class PanelUI(QWidget):
 
     @property
     def row_id(self):
+        """
+        Returns the ID (row index) of the selected order, else None if no
+        row has been selected
+        """
         return self._row_id
 
-    def interaction_wrapper(self, w_id, w_checked):
+    def _interaction_wrapper(self, w_id, w_checked):
         self._interact_func(self.row_id, w_id, w_checked)
 
 
-class OrderBaseElement(QWidget):
+class _OrderBaseElement(QWidget):
     def __init__(self, parent: QWidget | None, properties: pd.Series) -> None:
         super().__init__(parent=parent)
 
@@ -155,6 +164,9 @@ class OrderBaseElement(QWidget):
                            QSizePolicy.Policy.Maximum)
 
     def set_data(self, properties: pd.Series):
+        """
+        From an order Series, sets the labels to the corresponding values
+        """
         self.label_ref.setText(
             f"#{properties['REF']:0>4n}"
             if issubdtype(type(properties['REF']), int)
@@ -185,7 +197,7 @@ class OrderBaseElement(QWidget):
         )
 
 
-class SelectableOrder(OrderBaseElement):
+class _SelectableOrder(_OrderBaseElement):
     def __init__(self, parent: QWidget | None, report_fnc, row_id: int,
                  properties: pd.Series) -> None:
         """
@@ -205,7 +217,7 @@ class SelectableOrder(OrderBaseElement):
             self._report_fnc(self.row_id)
 
 
-class OrderWithControls(QWidget):
+class _OrderWithControls(QWidget):
     def __init__(self, parent: QWidget | None, toggledFunc) -> None:
         """
         toggledFunc = f(cbId, cbChecked)
@@ -216,7 +228,7 @@ class OrderWithControls(QWidget):
 
         self.main_v_layout = QVBoxLayout(self)
 
-        self.order = OrderBaseElement(
+        self.order = _OrderBaseElement(
             self,
             ORDER_PLACEHOLDER_SERIES
         )
@@ -248,6 +260,7 @@ class OrderWithControls(QWidget):
                            QSizePolicy.Policy.Maximum)
 
     def change_order(self, order: pd.Series) -> None:
+        """Sets the order object to the corresponding data"""
         self.order.set_data(order)
         # Disconnect signals before changing CBs statuses
         # Pair of .disconnect / .connect could be used too,

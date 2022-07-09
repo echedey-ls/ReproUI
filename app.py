@@ -60,8 +60,8 @@ class ReproUIApp(QMainWindow):
         self._fetch_orders_and_update_panel()
 
         # Open the qss styles file and read in the css-alike styling code
-        with open('assets\\styles\\styles.qss', 'r', encoding='utf-8') as f:
-            style = f.read()
+        with open('assets\\styles\\styles.qss', 'r', encoding='utf-8') as style_fl:
+            style = style_fl.read()
             self.setStyleSheet(style)
 
     def _init_timers(self) -> None:

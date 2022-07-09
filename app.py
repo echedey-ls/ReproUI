@@ -152,7 +152,7 @@ class ReproUIApp(QMainWindow):
         cb_id is an `int`, but is inverse-searched for the `constants.CBId` equivalent
         """
         if row is not None:
-            self._orders_df.loc[row, cb_id] = cb_checked
+            self._orders_df.loc[row, constants.CBId(cb_id).name] = cb_checked
             self._update_delay_timer.start()
         print(f'Row {row}, CB {constants.CBId(cb_id).name} was set to '
               f'{cb_checked}')  # TODO: Remove Debug Line

@@ -147,8 +147,6 @@ class WidgetApp(QMainWindow):
         if row is not None:
             self._orders_df.loc[row, cb_id] = cb_checked
             self._update_delay_timer.start()
-        print(f'''Row {row}, CB {cb_id.name} was set to
-            {cb_checked}''')  # TODO: Remove Debug Line
 
 
 if __name__ == "__main__":

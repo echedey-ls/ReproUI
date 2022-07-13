@@ -58,47 +58,72 @@ COLUMN_NAMES = [
     'REPRO_COMMENTS'
 ]
 # Columns to convert the dtype
-# Bool types need special parsing, see next list
+# Commented types is only for reference
+# Fetching with valueRenderOption='UNFORMATTED_VALUE'
+# already gives expected types
 COLUMN_DTYPES = {
     'TEMP': datetime64,
     'EMAIL': None,
     'NAME': None,
-    'TEF': None,
+    'TEF': object, # Equeals str
     'FILE_LINK': None,
     'LAYER_H': None,
-    'RIGIDITY': int,
+    'RIGIDITY': None, # int,
     'COLOUR_MATERIAL': None,
     'COMMENT': None,
-    'SAYS_IS_MEMBER': None,  # bool,
+    'SAYS_IS_MEMBER': None, # bool,
     'ACCEPTS_PAYING': None,
     'PRINTER': None,
-    'LOOKUP_MEMBER': None,  # bool,
+    'LOOKUP_MEMBER': None, # bool,
     'WEIGHT': None,
     'TIME': None,
     'PRICE': None,
-    'APPROVED': None,  # bool,
-    'PRINTED': None,  # bool,
-    'PICKED_UP': None,  # bool,
-    'PAID': None,  # bool,
-    'COMPLETION': None,
-    'REF': int,
+    'APPROVED': None, # bool,
+    'PRINTED': None, # bool,
+    'PICKED_UP': None, # bool,
+    'PAID': None, # bool,
+    'COMPLETION': None, # float,
+    'REF': None, # int,
     'REPRO_COMMENTS': None
 }
-# Booleans are parsed with a custom parser
-BOOLEAN_COLUMNS = [
-    'SAYS_IS_MEMBER',
-    'LOOKUP_MEMBER',
-    'APPROVED',
-    'PRINTED',
-    'PICKED_UP',
-    'PAID'
-]
+# Column A1 notation and name
+A1_TO_COLUMN = {
+    'TEMP': 'A',
+    'EMAIL': 'B',
+    'NAME': 'C',
+    'TEF': 'D',
+    'FILE_LINK': 'E',
+    'LAYER_H': 'F',
+    'RIGIDITY': 'G',
+    'COLOUR_MATERIAL': 'H',
+    'COMMENT': 'I',
+    'SAYS_IS_MEMBER': 'J',
+    'ACCEPTS_PAYING': 'K',
+    'PRINTER': 'L',
+    'LOOKUP_MEMBER': 'M',
+    'WEIGHT': 'N',
+    'TIME': 'O',
+    'PRICE': 'P',
+    'APPROVED': 'Q',
+    'PRINTED': 'R',
+    'PICKED_UP': 'S',
+    'PAID': 'T',
+    'COMPLETION': 'U',
+    'REF': 'V',
+    'REPRO_COMMENTS': 'W'
+}
+def cols2_a1_notation(col1, col2)  -> str:
+    """
+    Converts our DF col names to a column range, begins at row 2
+    """
+    return (
+        f'{A1_TO_COLUMN[col1]}2:{A1_TO_COLUMN[col2]}')
 
 
 @unique
 class CBId(IntEnum):
     """
-    Enum to interpret checkboxes in orderWithControls
+    Enum to interpret checkboxes in _OrderWithControls
     """
     APPROVED = 1
     PRINTED = 2
@@ -127,7 +152,7 @@ ORDER_PLACEHOLDER_SERIES = Series({
     'PRINTED': False,
     'PICKED_UP': False,
     'PAID': False,
-    'COMPLETION': '0%',
+    'COMPLETION': 0.,
     'REF': '----',
     'REPRO_COMMENTS': ''
 })

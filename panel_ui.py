@@ -22,9 +22,11 @@ __version__ = "0.1.0"
 __status__ = "Prototype"
 __doc__ = "This module provides the orders panel with its interactive elements"
 
+# pylint: disable=no-name-in-module, c-extension-no-member
 from PyQt6.QtWidgets import (QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,
                              QLabel, QGridLayout, QCheckBox, QSizePolicy,
                              QButtonGroup)
+# pylint: enable=no-name-in-module
 from PyQt6 import QtCore, QtGui
 from numpy import issubdtype
 import pandas as pd
@@ -34,18 +36,18 @@ from constants import CBId, ORDER_PLACEHOLDER_SERIES
 
 class PanelUI(QWidget):
     """Scroll area and interactive elements which show the orders"""
-    def __init__(self, parent: QWidget | None, interactionFunc) -> None:
+    def __init__(self, parent: QWidget | None, interaction_func) -> None:
         """
-        interactionFunc is in form f(row_id, CBId, checked)
+        interaction_func is in form f(row_id, CBId, checked)
         """
         super().__init__(parent=parent)
         self._orders_df = None
-        self._interact_func = interactionFunc
+        self._interact_func = interaction_func
 
         self._row_id = None
         self._prev_selected = None
 
-        self.orders_elements_list = None
+        self.orders_elements_list = list([])
 
         self.main_v_layout = QVBoxLayout(self)
 
@@ -97,14 +99,15 @@ class PanelUI(QWidget):
         Given an orders DataFrame, create the orders widgets and add them to
         the GUI
         """
-        # Clear selected order data and save to class
+        # Clear selected order data, and last selected and save to class
         self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES)
         self._orders_df = orders_df
+        self._prev_selected = None
         # Delete all orders
-        for widget in self.column_lyt.children():
-            self.column_lyt.removeWidget(widget)
-            widget.setParent(None)
-            widget.deleteLater()
+        for selectable_order in self.orders_elements_list:
+            self.column_lyt.removeWidget(selectable_order)
+            selectable_order.deleteLater()
+            selectable_order.setParent(None)
         # Create a list of orders
         self.orders_elements_list = [
             _SelectableOrder(self, self._on_order_click_event, index, order)
@@ -218,9 +221,9 @@ class _SelectableOrder(_OrderBaseElement):
 
 
 class _OrderWithControls(QWidget):
-    def __init__(self, parent: QWidget | None, toggledFunc) -> None:
+    def __init__(self, parent: QWidget | None, toggled_func) -> None:
         """
-        toggledFunc = f(cbId, cbChecked)
+        toggled_func = f(cbId, cbChecked)
         """
         super().__init__(parent=parent)
         # Tells the painter to paint all the background
@@ -239,7 +242,7 @@ class _OrderWithControls(QWidget):
         self.cb_button_group = QButtonGroup(self.interactive_controls)
         self.cb_button_group.setExclusive(False)
 
-        self.cb_button_group.idToggled.connect(toggledFunc)
+        self.cb_button_group.idToggled.connect(toggled_func)
 
         self._approved_cb = QCheckBox("Aprobado", self)
         self._printed_cb = QCheckBox("Impreso", self)

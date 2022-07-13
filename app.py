@@ -29,8 +29,10 @@ import sys
 import tomli
 
 import pandas as pd
+# pylint: disable=no-name-in-module
 from PyQt6.QtCore import Qt, QTimer, pyqtSlot
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
+# pylint: enable=no-name-in-module
 
 from google_flow import GoogleSpreadSheetInterface
 from panel_ui import PanelUI
@@ -98,10 +100,6 @@ class ReproUIApp(QMainWindow):
                 data=[order+[''] if len(order) == 22 else order
                       for order in orders_raw]
                 )
-            for boolean_column in constants.BOOLEAN_COLUMNS:
-                orders_df[boolean_column] = orders_df[boolean_column].map(
-                    {'TRUE': True, 'FALSE': False, '': False}
-                    )
             orders_df = (orders_df
                         .astype(constants.COLUMN_DTYPES)
                         .dropna(thresh=18)
@@ -121,12 +119,13 @@ class ReproUIApp(QMainWindow):
             return None
 
     def _update_ss(self, orders_df: pd.DataFrame):
+        # Here we only update what might have changed
+        # Prevents conflicts
         self._ssheet_inter.update_range(
-            range_=DATA_RANGE,
-            values=orders_df.values.astype(str).tolist()
+            range_=constants.cols2_a1_notation('APPROVED','PAID'),
+            values=orders_df.loc[:,'APPROVED':'PAID'].values.astype(str).tolist()
         )
 
-    # Orders
     @pyqtSlot()
     def _updater_slot(self):
         """
@@ -134,6 +133,8 @@ class ReproUIApp(QMainWindow):
         """
         print('Timer shot')
         self._update_ss(self._orders_df)
+        # Update to get numbers, just in case
+        self._fetch_orders_and_update_panel()
 
     def _fetch_orders_and_update_panel(self):
         self._orders_df = self._read_ss()

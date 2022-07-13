@@ -23,6 +23,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 
 class GoogleSpreadSheetInterface(object):
@@ -71,14 +72,16 @@ class GoogleSpreadSheetInterface(object):
             result = sheet.values().get(
                 spreadsheetId=self._spreadsheet_id,
                 range=range_,
-                majorDimension='ROWS'
+                majorDimension='ROWS',
+                valueRenderOption='UNFORMATTED_VALUE',
+                dateTimeRenderOption='FORMATTED_STRING'
             ).execute()
             values = result.get('values', [])
 
             if not values:
                 print('No data found.')
             ret_value = values
-        except Exception as err:
+        except HttpError as err:
             print(err)
         finally:
             self._action_underway.release()
@@ -101,7 +104,7 @@ class GoogleSpreadSheetInterface(object):
                     'majorDimension': 'ROWS'
                 }
             ).execute()
-        except Exception as err:
+        except HttpError as err:
             print(err)
         finally:
             self._action_underway.release()

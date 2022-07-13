@@ -32,6 +32,7 @@ import pandas as pd
 # pylint: disable=no-name-in-module
 from PyQt6.QtCore import Qt, QTimer, pyqtSlot
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt6.QtGui import QIcon
 # pylint: enable=no-name-in-module
 
 from google_flow import GoogleSpreadSheetInterface
@@ -49,6 +50,7 @@ class ReproUIApp(QMainWindow):
         super().__init__(parent=parent)
 
         self.setWindowTitle('ReproUI')
+        self.setWindowIcon(QIcon(os.path.join('.\\assets', 'logo_256.png')))
 
         # Initialize configuration
         if(os.path.exists(CONFIG_FILE) and os.path.isfile(CONFIG_FILE)):

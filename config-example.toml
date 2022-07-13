@@ -2,7 +2,7 @@
 # Rename to config.toml and put into ./secrets
 # Restart app after updating values
 
-# Timers delays (in secs)
+# Timers delays (in secs, can be float)
 DB_UPDATE_DELAY = 10
 DB_RETRIEVE_INTERVAL = 3600
 

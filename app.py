@@ -78,7 +78,7 @@ class ReproUIApp(QMainWindow):
         self._update_delay_timer.setSingleShot(True)
         self._update_delay_timer.setTimerType(Qt.TimerType.CoarseTimer)
         self._update_delay_timer.setInterval(
-            self.config['DB_UPDATE_DELAY']*1000
+            int(self.config['DB_UPDATE_DELAY']*1000)
         )
         self._update_delay_timer.timeout.connect(self._updater_slot)
 
@@ -86,7 +86,7 @@ class ReproUIApp(QMainWindow):
         self._retrieve_interval_timer.setSingleShot(False)
         self._retrieve_interval_timer.setTimerType(Qt.TimerType.VeryCoarseTimer)
         self._retrieve_interval_timer.setInterval(
-            self.config['DB_RETRIEVE_INTERVAL']*1000
+            int(self.config['DB_RETRIEVE_INTERVAL']*1000)
         )
         self._retrieve_interval_timer.timeout.connect(self._retriever_slot)
 

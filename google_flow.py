@@ -68,6 +68,7 @@ class GoogleSpreadSheetInterface(object):
             service = build('sheets', 'v4', credentials=self._creds)
 
             # Call the Sheets API
+            # https://googleapis.github.io/google-api-python-client/docs/dyn/sheets_v4.spreadsheets.values.html#get
             sheet = service.spreadsheets()
             result = sheet.values().get(
                 spreadsheetId=self._spreadsheet_id,
@@ -85,7 +86,7 @@ class GoogleSpreadSheetInterface(object):
             print(err)
         finally:
             self._action_underway.release()
-            return ret_value
+        return ret_value
 
     def update_range(self, range_: str, values: list[list]) -> dict | None:
         ret_value = None
@@ -94,6 +95,7 @@ class GoogleSpreadSheetInterface(object):
             service = build('sheets', 'v4', credentials=self._creds)
 
             # Call the Sheets API
+            # https://googleapis.github.io/google-api-python-client/docs/dyn/sheets_v4.spreadsheets.values.html#update
             sheet = service.spreadsheets()
             ret_value = sheet.values().update(
                 spreadsheetId=self._spreadsheet_id,
@@ -108,4 +110,4 @@ class GoogleSpreadSheetInterface(object):
             print(err)
         finally:
             self._action_underway.release()
-            return ret_value
+        return ret_value

@@ -27,10 +27,6 @@ from numpy import datetime64
 
 from pandas import Series, Timestamp
 
-# Timers delays
-DB_UPDATE_DELAY = 10*1000          # 10 secs
-DB_RETRIEVE_INTERVAL = 60*60*1000  # 1 hour
-
 # Column tags to rename terrible auto-generated form column titles
 COLUMN_NAMES = [
     'TEMP',
@@ -132,7 +128,7 @@ class CBId(IntEnum):
 
 # Placeholder order
 ORDER_PLACEHOLDER_SERIES = Series({
-    'TEMP': Timestamp('2012-05-10T00:00:00'),
+    'TEMP': Timestamp('2012-05-10T00:00:00'), # Club birthday, in case you are wondering
     'EMAIL': 'correo@serv.com',
     'NAME': 'Nombre --',
     'TEF': '---------',

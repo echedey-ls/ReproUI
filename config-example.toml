@@ -1,0 +1,10 @@
+# Example configuration file for ReproUI
+# Rename to config.toml and put into ./secrets
+# Restart app after updating values
+
+# Timers delays (in secs)
+DB_UPDATE_DELAY = 10
+DB_RETRIEVE_INTERVAL = 3600
+
+# Google conf data
+SPREADSHEET_ID = 'here goes the ID brrrrrrr'

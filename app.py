@@ -26,8 +26,8 @@ pending orders"""
 
 import os
 import sys
-import tomli
 
+import tomli
 import pandas as pd
 # pylint: disable=no-name-in-module
 from PyQt6.QtCore import Qt, QTimer, pyqtSlot
@@ -50,14 +50,21 @@ class ReproUIApp(QMainWindow):
 
         self.setWindowTitle('ReproUI')
 
+        # Initialize configuration
+        if(os.path.exists(CONFIG_FILE) and os.path.isfile(CONFIG_FILE)):
+            with open(CONFIG_FILE, 'rb') as cf_file:
+                self.config = tomli.load(cf_file)
+        else:
+            raise IOError('Configuration file not found')
+
         self._init_timers()
+        self._init_ss_interface()
 
         self.panel_ui = PanelUI(
             self,
             self._order_interaction
         )
         self.setCentralWidget(self.panel_ui)
-        self._init_ss_interface()
 
         self._fetch_orders_and_update_panel()
 
@@ -69,26 +76,25 @@ class ReproUIApp(QMainWindow):
     def _init_timers(self) -> None:
         self._update_delay_timer = QTimer(self)
         self._update_delay_timer.setSingleShot(True)
-        self._update_delay_timer.setTimerType(Qt.TimerType.VeryCoarseTimer)
-        self._update_delay_timer.setInterval(constants.DB_UPDATE_DELAY)
+        self._update_delay_timer.setTimerType(Qt.TimerType.CoarseTimer)
+        self._update_delay_timer.setInterval(
+            self.config['DB_UPDATE_DELAY']*1000
+        )
         self._update_delay_timer.timeout.connect(self._updater_slot)
 
         self._retrieve_interval_timer = QTimer()
         self._retrieve_interval_timer.setSingleShot(False)
         self._retrieve_interval_timer.setTimerType(Qt.TimerType.VeryCoarseTimer)
-        self._retrieve_interval_timer.setInterval(constants.DB_RETRIEVE_INTERVAL)
+        self._retrieve_interval_timer.setInterval(
+            self.config['DB_RETRIEVE_INTERVAL']*1000
+        )
         self._retrieve_interval_timer.timeout.connect(self._retriever_slot)
 
     # Google SpreadSheet functions
     def _init_ss_interface(self) -> None:
-        if(os.path.exists(CONFIG_FILE) and os.path.isfile(CONFIG_FILE)):
-            with open(CONFIG_FILE, 'rb') as cf_file:
-                config = tomli.load(cf_file)
-        else:
-            raise IOError('Configuration file not found')
         self._ssheet_inter = GoogleSpreadSheetInterface(
             secrets_path=SECRETS_PATH,
-            spreadsheet_id=config['SPREADSHEET_ID']
+            spreadsheet_id=self.config['SPREADSHEET_ID']
         )
 
     def _read_ss(self) -> pd.DataFrame:
@@ -105,7 +111,7 @@ class ReproUIApp(QMainWindow):
                         .dropna(thresh=18)
                         )
 
-            # Yeah, we shouldn't show all the names. Privacy protection first.
+            # Yeah, we shouldn't show all the name. Privacy protection first.
             def privacy_protect_name(name):
                 name_splitted = name.split()
                 return ' '.join([name_splitted[0]] + [nm[:1].upper()+'.'
@@ -155,9 +161,6 @@ class ReproUIApp(QMainWindow):
         if row is not None:
             self._orders_df.loc[row, constants.CBId(cb_id).name] = cb_checked
             self._update_delay_timer.start()
-        print(f'Row {row}, CB {constants.CBId(cb_id).name} was set to '
-              f'{cb_checked}')  # TODO: Remove Debug Line
-
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

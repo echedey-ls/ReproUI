@@ -88,11 +88,11 @@ class PanelUI(QWidget):
             selected_data = self._orders_df.loc[row_id]
             self._prev_selected = row_id
             self._row_id = row_id
+            self.orders_and_controls.change_order(selected_data)
         else:
-            selected_data = ORDER_PLACEHOLDER_SERIES
+            self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES, enabled=False)
             self._prev_selected = None
             self._row_id = None
-        self.orders_and_controls.change_order(selected_data)
 
     def set_orders(self, orders_df: pd.DataFrame):
         """
@@ -100,7 +100,7 @@ class PanelUI(QWidget):
         the GUI
         """
         # Clear selected order data, and last selected and save to class
-        self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES)
+        self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES, enabled=False)
         self._orders_df = orders_df
         self._prev_selected = None
         # Delete all orders
@@ -262,9 +262,16 @@ class _OrderWithControls(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Minimum,
                            QSizePolicy.Policy.Maximum)
 
-    def change_order(self, order: pd.Series) -> None:
+    def change_order(self, order: pd.Series, enabled: bool=True) -> None:
         """Sets the order object to the corresponding data"""
         self.order.set_data(order)
+
+        # Set enabled of the checkboxes
+        self._approved_cb.setEnabled(enabled)
+        self._printed_cb.setEnabled(enabled)
+        self._pickedup_cb.setEnabled(enabled)
+        self._paid_cb.setEnabled(enabled)
+
         # Disconnect signals before changing CBs statuses
         # Pair of .disconnect / .connect could be used too,
         # but needs the signal handler as argument. This works just well.

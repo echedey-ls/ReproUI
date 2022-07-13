@@ -99,6 +99,8 @@ class PanelUI(QWidget):
         Given an orders DataFrame, create the orders widgets and add them to
         the GUI
         """
+        # First of all, ignore completed tasks
+        orders_df = orders_df[orders_df['COMPLETION'] != 1]
         # Clear selected order data, and last selected and save to class
         self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES, enabled=False)
         self._orders_df = orders_df

@@ -18,7 +18,7 @@ __author__ = "Echedey Luis Álvaerz"
 __copyright__ = "Copyright 2022, Echedey Luis Álvarez"
 __credits__ = ["Echedey Luis Álvarez"]
 __license__ = "GPL v3"
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 __status__ = "Prototype"
 __doc__ = "This module provides the orders panel with its interactive elements"
 

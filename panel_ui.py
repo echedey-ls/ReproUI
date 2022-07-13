@@ -28,7 +28,7 @@ from PyQt6.QtWidgets import (QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,
                              QButtonGroup)
 # pylint: enable=no-name-in-module
 from PyQt6 import QtCore, QtGui
-from numpy import issubdtype
+from numpy import integer
 import pandas as pd
 
 from constants import CBId, ORDER_PLACEHOLDER_SERIES
@@ -172,7 +172,8 @@ class _OrderBaseElement(QWidget):
         """
         self.label_ref.setText(
             f"#{properties['REF']:0>4n}"
-            if issubdtype(type(properties['REF']), int)
+            # https://stackoverflow.com/questions/40429917/in-python-how-would-you-check-if-a-number-is-one-of-the-integer-types
+            if isinstance(properties['REF'], (int, integer))
             else f"#{properties['REF']}"
         )
         self.label_name.setText(

@@ -211,7 +211,7 @@ class _OrderBaseElement(QWidget):
 
 
 class _SelectableOrder(_OrderBaseElement):
-    def __init__(self, parent: QWidget | None, report_fnc, row_id: int,
+    def __init__(self, parent: Optional['QWidget'], report_fnc, row_id: int,
                  properties: pd.Series) -> None:
         """
         Report function: f(row_id)

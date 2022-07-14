@@ -50,7 +50,7 @@ class ReproUIApp(QMainWindow):
     def __init__(self, parent: Optional['QWidget']) -> None:
         super().__init__(parent=parent)
 
-        self.setWindowTitle('ReproUI')
+        self.setWindowTitle('CREA - ReproUI')
         self.setWindowIcon(QIcon(os.path.join('.\\assets', 'logo_256.png')))
 
         # Initialize configuration
@@ -128,7 +128,7 @@ class ReproUIApp(QMainWindow):
             return None
 
     def _update_ss(self, orders_df: pd.DataFrame):
-        # Here we only update what might have changed
+        # Here we only update what might have changed (=checkboxes)
         # Prevents conflicts
         self._ssheet_inter.update_range(
             range_=constants.cols2_a1_notation('APPROVED','PAID'),
@@ -140,7 +140,7 @@ class ReproUIApp(QMainWindow):
         """
         Wrapper to call ._update_ss(orders) with the dataframe argument
         """
-        print('Timer shot')
+        self.panel_ui.orders_and_controls.setDisabled(True)
         self._update_ss(self._orders_df)
         # Update to get numbers, just in case
         self._fetch_orders_and_update_panel()

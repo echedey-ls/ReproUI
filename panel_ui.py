@@ -62,6 +62,7 @@ class PanelUI(QWidget):
         # A QWidget is put into self, the scroll area, which has the vertical
         # layout to be scrolled
         self.column_wdgt = QWidget(self)
+        self.column_wdgt.setObjectName('scrollWidget')
         self.column_lyt = QVBoxLayout(self.column_wdgt)
         self.column_lyt.setAlignment(QtCore.Qt.AlignmentFlag.AlignTop)
         self.orders_scroll.setWidget(self.column_wdgt)

@@ -22,12 +22,14 @@ __version__ = "1.0.0"
 __status__ = "Prototype"
 __doc__ = "This module provides the orders panel with its interactive elements"
 
+from typing import Optional
+
 # pylint: disable=no-name-in-module, c-extension-no-member
-from PyQt6.QtWidgets import (QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,
+from PyQt5.QtWidgets import (QWidget, QScrollArea, QVBoxLayout, QHBoxLayout,
                              QLabel, QGridLayout, QCheckBox, QSizePolicy,
                              QButtonGroup)
 # pylint: enable=no-name-in-module
-from PyQt6 import QtCore, QtGui
+from PyQt5 import QtCore, QtGui
 from numpy import integer
 import pandas as pd
 
@@ -36,7 +38,7 @@ from constants import CBId, ORDER_PLACEHOLDER_SERIES
 
 class PanelUI(QWidget):
     """Scroll area and interactive elements which show the orders"""
-    def __init__(self, parent: QWidget | None, interaction_func) -> None:
+    def __init__(self, parent: Optional['QWidget'], interaction_func) -> None:
         """
         interaction_func is in form f(row_id, CBId, checked)
         """
@@ -131,7 +133,7 @@ class PanelUI(QWidget):
 
 
 class _OrderBaseElement(QWidget):
-    def __init__(self, parent: QWidget | None, properties: pd.Series) -> None:
+    def __init__(self, parent: Optional['QWidget'], properties: pd.Series) -> None:
         super().__init__(parent=parent)
 
         # Tells the painter to paint all the background
@@ -224,7 +226,7 @@ class _SelectableOrder(_OrderBaseElement):
 
 
 class _OrderWithControls(QWidget):
-    def __init__(self, parent: QWidget | None, toggled_func) -> None:
+    def __init__(self, parent: Optional['QWidget'], toggled_func) -> None:
         """
         toggled_func = f(cbId, cbChecked)
         """

@@ -61,7 +61,7 @@ class GoogleSpreadSheetInterface(object):
             with open(self._token_path, 'w', encoding='utf-8') as token:
                 token.write(self._creds.to_json())
 
-    def read_range(self, range_: str) -> list[list]:
+    def read_range(self, range_: str) -> 'list[list]':
         ret_value = None
         try:
             self._action_underway.acquire()
@@ -88,7 +88,7 @@ class GoogleSpreadSheetInterface(object):
             self._action_underway.release()
         return ret_value
 
-    def update_range(self, range_: str, values: list[list]) -> dict | None:
+    def update_range(self, range_: str, values: 'list[list]') -> dict:
         ret_value = None
         try:
             self._action_underway.acquire()

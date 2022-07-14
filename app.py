@@ -26,13 +26,14 @@ pending orders"""
 
 import os
 import sys
+from typing import Optional
 
 import tomli
 import pandas as pd
 # pylint: disable=no-name-in-module
-from PyQt6.QtCore import Qt, QTimer, pyqtSlot
-from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget
-from PyQt6.QtGui import QIcon
+from PyQt5.QtCore import Qt, QTimer, pyqtSlot
+from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget
+from PyQt5.QtGui import QIcon
 # pylint: enable=no-name-in-module
 
 from google_flow import GoogleSpreadSheetInterface
@@ -46,7 +47,7 @@ DATA_RANGE = 'HojaA!A2:W'  # First row is col names
 
 class ReproUIApp(QMainWindow):
     """Main class app of ReproUI"""
-    def __init__(self, parent: QWidget | None) -> None:
+    def __init__(self, parent: Optional['QWidget']) -> None:
         super().__init__(parent=parent)
 
         self.setWindowTitle('ReproUI')
@@ -109,7 +110,7 @@ class ReproUIApp(QMainWindow):
                       for order in orders_raw]
                 )
             orders_df = (orders_df
-                        .astype(constants.COLUMN_DTYPES)
+                        # .astype(constants.COLUMN_DTYPES)  # Useless
                         .dropna(thresh=18)
                         )
 

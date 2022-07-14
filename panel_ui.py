@@ -187,14 +187,14 @@ class _OrderBaseElement(QWidget):
             properties['NAME']
         )
         self.label_member.setText(
-            "Membresía" if(properties['LOOKUP_MEMBER'] is None)
-            else "Miembro verificado" if(properties['LOOKUP_MEMBER'])
-            else "No verificado"
+            "Miembro verificado" if(properties['LOOKUP_MEMBER'] is True)
+            else "No verificado" if(properties["LOOKUP_MEMBER"] is False)
+            else "Membresía"  # if(properties['LOOKUP_MEMBER'] is None)
         )
         self.label_member.setStyleSheet(
-            "color: red;" if(properties['LOOKUP_MEMBER'] is False)
-            else "color: black;" if(properties['LOOKUP_MEMBER'] is True)
-            else "color: None"
+            "color: black;" if(properties['LOOKUP_MEMBER'] is True)
+            else "color: red;" if(properties['LOOKUP_MEMBER'] is False)
+            else "color: None;"  # if(properties['LOOKUP_MEMBER'] is None)
         )
         self.label_comment.setText(
             properties['COMMENT']

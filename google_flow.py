@@ -26,7 +26,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 
-class GoogleSpreadSheetInterface(object):
+class GoogleSpreadSheetInterface:
     # pylint: disable=no-member
     def __init__(self, *, secrets_path, spreadsheet_id) -> None:
         self._secrets_path = secrets_path
@@ -64,50 +64,46 @@ class GoogleSpreadSheetInterface(object):
     def read_range(self, range_: str) -> list[list]:
         ret_value = None
         try:
-            self._action_underway.acquire()
-            service = build('sheets', 'v4', credentials=self._creds)
+            with self._action_underway:
+                service = build('sheets', 'v4', credentials=self._creds)
 
-            # Call the Sheets API
-            # https://googleapis.github.io/google-api-python-client/docs/dyn/sheets_v4.spreadsheets.values.html#get
-            sheet = service.spreadsheets()
-            result = sheet.values().get(
-                spreadsheetId=self._spreadsheet_id,
-                range=range_,
-                majorDimension='ROWS',
-                valueRenderOption='UNFORMATTED_VALUE',
-                dateTimeRenderOption='FORMATTED_STRING'
-            ).execute()
-            values = result.get('values', [])
+                # Call the Sheets API
+                # https://googleapis.github.io/google-api-python-client/docs/dyn/sheets_v4.spreadsheets.values.html#get
+                sheet = service.spreadsheets()
+                result = sheet.values().get(
+                    spreadsheetId=self._spreadsheet_id,
+                    range=range_,
+                    majorDimension='ROWS',
+                    valueRenderOption='UNFORMATTED_VALUE',
+                    dateTimeRenderOption='FORMATTED_STRING'
+                ).execute()
+                values = result.get('values', [])
 
             if not values:
                 print('No data found.')
             ret_value = values
         except HttpError as err:
             print(err)
-        finally:
-            self._action_underway.release()
         return ret_value
 
     def update_range(self, range_: str, values: list[list]) -> dict | None:
         ret_value = None
         try:
-            self._action_underway.acquire()
-            service = build('sheets', 'v4', credentials=self._creds)
+            with self._action_underway:
+                service = build('sheets', 'v4', credentials=self._creds)
 
-            # Call the Sheets API
-            # https://googleapis.github.io/google-api-python-client/docs/dyn/sheets_v4.spreadsheets.values.html#update
-            sheet = service.spreadsheets()
-            ret_value = sheet.values().update(
-                spreadsheetId=self._spreadsheet_id,
-                range=range_,
-                valueInputOption='USER_ENTERED',
-                body={
-                    'values': values,
-                    'majorDimension': 'ROWS'
-                }
-            ).execute()
+                # Call the Sheets API
+                # https://googleapis.github.io/google-api-python-client/docs/dyn/sheets_v4.spreadsheets.values.html#update
+                sheet = service.spreadsheets()
+                ret_value = sheet.values().update(
+                    spreadsheetId=self._spreadsheet_id,
+                    range=range_,
+                    valueInputOption='USER_ENTERED',
+                    body={
+                        'values': values,
+                        'majorDimension': 'ROWS'
+                    }
+                ).execute()
         except HttpError as err:
             print(err)
-        finally:
-            self._action_underway.release()
         return ret_value

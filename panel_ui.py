@@ -83,14 +83,18 @@ class PanelUI(QWidget):
         # !Order & Controls
 
     def _on_order_click_event(self, row_id):
-        print(f'LOG: {row_id} was clicked')
         if self._prev_selected != row_id:
             selected_data = self._orders_df.loc[row_id]
+            self.orders_and_controls.change_order(selected_data)
+            if self._prev_selected is None:
+                self.orders_and_controls.setDisabled(False)
+            # Save status
             self._prev_selected = row_id
             self._row_id = row_id
-            self.orders_and_controls.change_order(selected_data)
         else:
-            self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES, enabled=False)
+            self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES)
+            self.orders_and_controls.setDisabled(True)
+            # Save status
             self._prev_selected = None
             self._row_id = None
 
@@ -102,7 +106,8 @@ class PanelUI(QWidget):
         # First of all, ignore completed tasks
         orders_df = orders_df[orders_df['COMPLETION'] != 1]
         # Clear selected order data, and last selected and save to class
-        self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES, enabled=False)
+        self.orders_and_controls.change_order(ORDER_PLACEHOLDER_SERIES)
+        self.orders_and_controls.setDisabled(True)
         self._orders_df = orders_df
         self._prev_selected = None
         # Delete all orders
@@ -265,15 +270,9 @@ class _OrderWithControls(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Minimum,
                            QSizePolicy.Policy.Maximum)
 
-    def change_order(self, order: pd.Series, enabled: bool=True) -> None:
+    def change_order(self, order: pd.Series) -> None:
         """Sets the order object to the corresponding data"""
         self.order.set_data(order)
-
-        # Set enabled of the checkboxes
-        self._approved_cb.setEnabled(enabled)
-        self._printed_cb.setEnabled(enabled)
-        self._pickedup_cb.setEnabled(enabled)
-        self._paid_cb.setEnabled(enabled)
 
         # Disconnect signals before changing CBs statuses
         # Pair of .disconnect / .connect could be used too,

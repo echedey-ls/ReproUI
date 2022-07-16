@@ -50,7 +50,7 @@ class ReproUIApp(QMainWindow):
         super().__init__(parent=parent)
 
         self.setWindowTitle('CREA - ReproUI')
-        self.setWindowIcon(QIcon(os.path.join('.\\assets', 'logo_256.png')))
+        self.setWindowIcon(QIcon(os.path.join('.\\assets\\logos', 'logo_256.png')))
 
         # Initialize configuration
         if(os.path.exists(CONFIG_FILE) and os.path.isfile(CONFIG_FILE)):

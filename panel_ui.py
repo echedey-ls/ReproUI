@@ -49,6 +49,9 @@ class PanelUI(QWidget):
 
         self.orders_elements_list = list([])
 
+        self._init_ui()
+
+    def _init_ui(self) -> None:
         self.main_v_layout = QVBoxLayout(self)
 
         # Scroll Area

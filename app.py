@@ -49,9 +49,6 @@ class ReproUIApp(QMainWindow):
     def __init__(self, parent: QWidget | None) -> None:
         super().__init__(parent=parent)
 
-        self.setWindowTitle('CREA - ReproUI')
-        self.setWindowIcon(QIcon(os.path.join('.\\assets\\logos', 'logo_256.png')))
-
         # Initialize configuration
         if(os.path.exists(CONFIG_FILE) and os.path.isfile(CONFIG_FILE)):
             with open(CONFIG_FILE, 'rb') as cf_file:
@@ -62,18 +59,31 @@ class ReproUIApp(QMainWindow):
         self._init_timers()
         self._init_ss_interface()
 
+        self._init_ui()
+
+        self._fetch_orders_and_update_panel()
+
+    def _init_ui(self) -> None:
+        self.setWindowTitle('CREA - ReproUI')
+        self.setWindowIcon(QIcon(os.path.join('.\\assets\\logos', 'logo_256.png')))
+        # Open the qss styles file and read in the css-alike styling code
+        with open('assets\\styles\\styles.qss', 'r', encoding='utf-8') as style_fl:
+            style = style_fl.read()
+            self.setStyleSheet(style)
+        # !Toolbars
+        # Main central widget
         self.panel_ui = PanelUI(
             self,
             self._order_interaction
         )
         self.setCentralWidget(self.panel_ui)
-
-        self._fetch_orders_and_update_panel()
-
-        # Open the qss styles file and read in the css-alike styling code
-        with open('assets\\styles\\styles.qss', 'r', encoding='utf-8') as style_fl:
-            style = style_fl.read()
-            self.setStyleSheet(style)
+        # !Main central widget
+        # Status bar
+        # self._status_bar = self.statusBar()
+        self._status_bar = QStatusBar(self)
+        self._status_bar.setObjectName('status_bar')
+        self.setStatusBar(self._status_bar)
+        # !Status bar
 
     def _init_timers(self) -> None:
         self._update_delay_timer = QTimer(self)
@@ -145,6 +155,7 @@ class ReproUIApp(QMainWindow):
         self._fetch_orders_and_update_panel()
 
     def _fetch_orders_and_update_panel(self):
+        # Read and update UI
         self._orders_df = self._read_ss()
         self.panel_ui.set_orders(self._orders_df)
 
